@@ -22,7 +22,7 @@ zengPalette <- c('B' = "#FFA500", 'Plasma Cell' = "#C1BC00", 'Plasma_Cell' = "#C
                  'Naive T' = "#809999", 'NK' = "#7B68EE", 'pDC' = "#5A9DFF", 'Pre-B' = "#6B8E23", 'Pro-B' = "#A5531C",
                  'Pro-Monocyte' = "#FF4856")
 
-##### Directory for outputs:
+##### Directory for outputs (replace with your directory for outputs):
 wd <- 'repos/runx1eto-kd-aml/scRNA/out/'
 
 ##### reproducibility
@@ -53,7 +53,7 @@ saveRDS(markers, paste0(wd, '310_healthy_allMarkers_KDvsMM.rds'))
 
 ## 2.2. Vizualize --------------------------------------------------------------
 
-### 2.2.1. UMAP by condition (Figure 5A)
+### 2.2.1. UMAP by condition (Figure 4G)
 p <- map2(seu_healthy, names(seu_healthy),
           ~ DimPlot(.x, 
                     reduction = "umap",
@@ -65,7 +65,7 @@ pdf(paste0(wd, '315_healthy_umap_byCond.pdf'), height = 4)
 ggarrange(plotlist = p, ncol = 2, common.legend = TRUE, legend = 'bottom')
 dev.off()
 
-### 2.2.2. Volcano plot (Figure 5C)
+### 2.2.2. Volcano plot (Suppl. Figure 4E)
 markers <- map(markers, ~ dplyr::select(.x, avg_log2FC, p_val_adj))
 
 pdf(paste0(wd, '320_healthy_volcano.pdf'))
@@ -138,7 +138,7 @@ names(seu_healthy) <- names(preds[[1]])
 
 ## 3.3. Visualize --------------------------------------------------------------
 
-### 3.3.1. UMAP by prediction (Figure 5B)
+### 3.3.1. UMAP by prediction (Figure 4D)
 pdf(paste0(wd, '323_healthy_ptA_umap_predZeng.pdf'), height = 6, width = 9)
 DimPlot(seu_healthy[[1]],
         reduction = "umap",
@@ -155,7 +155,7 @@ DimPlot(seu_healthy[[1]],
   labs(title = NULL)
 dev.off()
 
-### 3.3.2. UMAP by prediction confidence (Figure 5C)
+### 3.3.2. UMAP by prediction confidence (Figure 4E)
 pdf(paste0(wd, '324_healthy_umap_predZeng_score.pdf'), height = 5, width = 10)
 map2(seu_healthy, names(seu_healthy),
      ~FeaturePlot(.x,
@@ -173,33 +173,8 @@ map2(seu_healthy, names(seu_healthy),
        labs(subtitle = .y))
 dev.off()
 
-### 4.3.3. Box of prediction confidence by condition (Figure 5D)
+### 4.3.3. Box of prediction confidence by condition (Figure 4F, Suppl. Figure 4G)
 pdf(paste0(wd, '325_healthy_box_byCond_ZengScore.pdf'), width = 2.5, height = 2.5)
-map2(seu_healthy, names(seu_healthy),
-     ~ ggplot(.x@meta.data, 
-              aes(x = condition, 
-                  y = pred.Zeng.score, 
-                  fill = condition, 
-                  colour = condition)) +
-       geom_violin() +
-       geom_boxplot(width = 0.2) +
-       geom_jitter(size = 0.1) +
-       theme_minimal() +
-       scale_fill_manual(values = kdmm_palette) +
-       scale_color_manual(values = c('black', 'black')) +
-       labs(y = 'Zeng score',
-            subtitle = .y) +
-       theme(legend.position = 'none',
-             panel.grid.major = element_blank(), 
-             panel.grid.minor = element_blank(),
-             axis.line = element_line(colour = "black"),
-             axis.ticks = element_line(colour = "black"),
-             axis.text.x = element_text(colour = "black"),
-             axis.text.y = element_text(colour = "black")) +
-       stat_compare_means(comparisons = list(c('mismatch control', 'RUNX1::RUNX1T1 knockdown')), 
-                          method = 'wilcox.test',
-                          label = "p.format"))
-
 map2(seu_healthy, names(seu_healthy),
      ~ ggplot(.x@meta.data, 
               aes(x = condition, 
@@ -235,11 +210,9 @@ seu_save <- lapply(seu_healthy, function(obj){
   return(obj)
 })
 saveRDS(seu_save, paste0(wd, 'seu_ptABseparately_healthyCells.rds'))
+##### Available at https://doi.org/10.5281/zenodo.14578307, folder "scRNA"
 
-# 98. Session info ==============================================================
+# 99. Session info ==============================================================
 sink(paste0(wd, '999_sessionInfo_2.txt'))
 sessionInfo()
 sink()
-
-# 99. Clear the environment =====================================================
-rm(list = ls())
