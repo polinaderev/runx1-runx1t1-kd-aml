@@ -620,7 +620,7 @@ gsea_res_cellines <- map(cellines_genesets, ~GSEA(
 saveRDS(gsea_res_cellines, paste0(out_dir, '151_gsea_res_againstCellines.rds'))
 ##### gsea_res_cellines <- readRDS(paste0(out_dir, '151_gsea_res_againstCellines.rds'))
 
-## 7.12. Vizualize GSEA results in a bulk manner -------------------------------
+## 7.12. Vizualize GSEA results in a bulk manner (Figure 2A, Suppl. Figure 2E) ----
 pdf(paste0(out_dir, '160_gseaPlots_againstCellines.pdf'), width = 11, height = 11)
 plotlist1 <- map(c('Kasumi-1_up', 'Kasumi-1_dn'),
                 function(celline_name){
