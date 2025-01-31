@@ -13,8 +13,8 @@ library(ggpubr)
 kdmm_palette <- c('RUNX1::RUNX1T1 knockdown' = '#f41626', 'mismatch control'= '#2538a5')
 cbPalette <- c("#E69F00", "#56B4E9","#009E73", "#F0E442", "#0072B2","#D55E00", "#CC79A7", "#999999")
 
-in_path <- 'flow_fig2/in/' ##### input directory
-wd <- 'flow_fig2/out/' ##### output directory
+in_path <- 'flow_ptC/in/' ##### input directory, replace with your input directory
+wd <- 'flow_ptC/out/' ##### output directory, replace with your output directory
 
 ##### reproducibility
 set.seed(42)
@@ -22,6 +22,7 @@ set.seed(42)
 # 1. Load in the data ==========================================================
 
 ## 1.1. Metadata Excel file that contains info about samples and about the panel -----
+##### Can be found at https://doi.org/10.5281/zenodo.14578307, folder "flow/flow_ptC_gated"
 excel_path <- paste0(in_path, 'metadata.xlsx')
 metadata_sheets <- excel_sheets(excel_path)
 
@@ -29,6 +30,7 @@ metadata <- map(metadata_sheets, ~read_excel(excel_path, sheet = .x))
 names(metadata) <- c('samples', 'panel')
 
 ## 1.2. FCS files --------------------------------------------------------------
+##### Can be found at https://doi.org/10.5281/zenodo.14578307, folder "flow/flow_ptC_gated"
 
 ### 1.2.1. Load
 dat_raw <- read.flowSet(files = metadata[['samples']]$file_name,
