@@ -21,7 +21,7 @@ library(enrichplot)
 library(ggpubr)
 
 ##### Replace with your working directory
-setwd('C:/polina/analysis/pderevianko/runx1eto-kd-aml/bulkRNA/')
+setwd('C:/polina/analysis/pderevianko/runx1-runx1t1-kd-aml/bulkRNA/')
 
 ##### output directory (inside the working directory)
 out_dir <- 'out/'
@@ -129,6 +129,7 @@ read_counts <- function(file_path) {
 ## 1.2. Read the count files to dataframes -------------------------------------
 in_dir <- 'in'
 
+##### These count files are available at https://doi.org/10.5281/zenodo.14578307, folder "bulkRNA"
 file_paths <- list.files(in_dir, pattern = "\\.txt$", full.names = TRUE)
 
 in_data <- lapply(file_paths, read_counts) 
@@ -192,6 +193,7 @@ rld <- rlog(dds, blind = FALSE)
 z <- t(apply(assay(rld), 1, scale)) 
 colnames(z) <- colnames(rld)
 
+## 4.4. Remove NAs from the results --------------------------------------------
 res_ex <- drop_na(res_df, log2FoldChange, padj)
 
 res_sign <- dplyr::filter(res_ex, padj < 0.05 & baseMean > 50)
@@ -371,48 +373,9 @@ dev.off()
 
 ## 6.1. Get the list of gene sets we would like to use for analysis ------------
 
-##### This is a curated list. I just searched MSigDB for gene sets potentially 
-##### connected with proliferation and/or differentiation of cells of the hematopoietic lineage.
-##### Olaf also added some gene sets to his taste.
-
 mygenesets_names <- c(
-  "EPPERT_CE_HSC_LSC",
-  "EPPERT_HSC_R",
-  "EPPERT_PROGENITOR",
-  "GAL_LEUKEMIC_STEM_CELL_DN",
-  "GAL_LEUKEMIC_STEM_CELL_UP",
-  "GOBP_HEMATOPOIETIC_STEM_CELL_DIFFERENTIATION",
-  "GOBP_HEMATOPOIETIC_STEM_CELL_PROLIFERATION",
-  "GOBP_INFLAMMATORY_RESPONSE",
-  "GOBP_LEUKOCYTE_APOPTOTIC_PROCESS",
-  "GOBP_LEUKOCYTE_DIFFERENTIATION",
-  "GOBP_LYMPHOCYTE_APOPTOTIC_PROCESS",
-  "GOBP_REGULATION_OF_HEMATOPOIETIC_PROGENITOR_CELL_DIFFERENTIATION",
-  "HALLMARK_ANGIOGENESIS",
-  "HP_ACUTE_LEUKEMIA",
-  "HP_LEUKEMIA",
-  "JAATINEN_HEMATOPOIETIC_STEM_CELL_DN",
-  "JAATINEN_HEMATOPOIETIC_STEM_CELL_UP",
-  "KEGG_ACUTE_MYELOID_LEUKEMIA",
-  "KEGG_HEMATOPOIETIC_CELL_LINEAGE",
-  "ROSS_AML_WITH_AML1_ETO_FUSION",
-  "TONKS_TARGETS_OF_RUNX1_RUNX1T1_FUSION_ERYTHROCYTE_DN",
-  "TONKS_TARGETS_OF_RUNX1_RUNX1T1_FUSION_GRANULOCYTE_DN",
-  "TONKS_TARGETS_OF_RUNX1_RUNX1T1_FUSION_GRANULOCYTE_UP",
   "TONKS_TARGETS_OF_RUNX1_RUNX1T1_FUSION_HSC_DN",
   "TONKS_TARGETS_OF_RUNX1_RUNX1T1_FUSION_HSC_UP",
-  "TONKS_TARGETS_OF_RUNX1_RUNX1T1_FUSION_MONOCYTE_DN",
-  "TONKS_TARGETS_OF_RUNX1_RUNX1T1_FUSION_MONOCYTE_UP",
-  "TONKS_TARGETS_OF_RUNX1_RUNX1T1_FUSION_SUSTAINED_IN_MONOCYTE_UP",
-  "TONKS_TARGETS_OF_RUNX1_RUNX1T1_FUSION_SUSTAINDED_IN_ERYTHROCYTE_UP",
-  "WIERENGA_STAT5A_TARGETS_GROUP1",
-  "WIERENGA_STAT5A_TARGETS_GROUP2",
-  "WP_HEMATOPOIETIC_STEM_CELL_DIFFERENTIATION",
-  "MANALO_HYPOXIA_DN",
-  "MANALO_HYPOXIA_UP",
-  "GOBP_DNA_REPLICATION",
-  "REACTOME_BASE_EXCISION_REPAIR",
-  "WP_VEGFA_VEGFR2_SIGNALING",
   "HAY_BONE_MARROW_CD34_POS_CLP",
   "HAY_BONE_MARROW_CD34_POS_EO_B_MAST",
   "HAY_BONE_MARROW_CD34_POS_ERP",
@@ -471,13 +434,12 @@ gsea_res <- GSEA(
   TERM2GENE = dplyr::select(mygenesets, gs_name, gene_symbol)
 )
 
-write.csv(gsea_res, paste0(out_dir, '070_gsea_res.csv'))
 saveRDS(gsea_res, paste0(out_dir, '071_gsea_res.rds'))
 ##### gsea_res <- readRDS(paste0(out_dir, '071_gsea_res.rds'))
 
 gsea_sign <- dplyr::filter(gsea_res, p.adjust < 0.05)
 
-## 6.4. Vizualize GSEA results in a bulk manner --------------------------------
+## 6.4. Vizualize GSEA results in a bulk manner (Suppl. Figure 2D) -------------
 pdf(paste0(out_dir, '080_gseaPlots.pdf'), width = 5, height = 5)
 plotlist <- map(mygenesets_names[mygenesets_names %in% gsea_sign$ID],
     function(geneset_name){
@@ -496,41 +458,9 @@ plotlist <- map(mygenesets_names[mygenesets_names %in% gsea_sign$ID],
 print(plotlist)
 dev.off()
 
+## 6.5. Visualize GSEA results for selected pathways ---------------------------
 
-## 6.5. Which genes have which DE values for each of the pathways? -------------
-csv_names <- paste0(paste0(out_dir, '090_gsea_de/090_gsea_de_'), names(mygenesets_list[names(mygenesets_list) %in% gsea_sign$ID]), '.csv')
-
-res_df$gene <- rownames(res_df)
-
-map2(mygenesets_list[names(mygenesets_list) %in% gsea_sign$ID], csv_names,
-     ~ write_csv(getPathwayGenes(res_df, .x),
-                 .y
-     )
-)
-
-## 6.6. Visualize GSEA results for selected pathways ---------------------------
-
-### 6.6.1. Tonks et al (RUNX1/ETO targets)
-
-#### 6.6.1.1. Determine if this set of gene sets has overlapping genes
-tonks_names <- mygenesets_names[grep('^TONKS_', mygenesets_names)]
-tonks <- mygenesets_list[tonks_names]
-
-tonks_allGenes <- unlist(tonks)
-tonks_geneCounts <- table(tonks_allGenes)
-names(tonks_geneCounts[tonks_geneCounts > 1])
-##### The Tonks set of gene sets has too many overlaps, so I wouldn't like to plot a dot/barplot with it.
-##### So I'll only plot an emapplot.
-
-gsea_sign_tonks <- dplyr::filter(gsea_sign, grepl('^TONKS_', ID))
-
-### 6.6.1.2. Emapplot
-tonks_pt <- pairwise_termsim(gsea_sign_tonks)
-emapplot(tonks_pt, cex_label_category = 0.25)
-
-### 6.6.2. Hay et al (bone marrow cell types)
-
-#### 6.6.2.1. Determine if this set of gene sets has overlapping genes
+### 6.5.1. Determine if this set of gene sets has overlapping genes
 hay_names <- mygenesets_names[grep('^HAY_', mygenesets_names)]
 hay <- mygenesets_list[hay_names]
 
@@ -541,7 +471,7 @@ names(hay_geneCounts[hay_geneCounts > 1])
 
 gsea_hay <- dplyr::filter(gsea_res, grepl('^HAY_', ID))
 
-#### 6.6.2.2. Barplot
+#### 6.5.2. Barplot
 pdf(paste0(out_dir, '100_gsea_HAY_BONE_MARROW_barplot.pdf'), width = 10, height = 6)
 plotNES(gsea_hay)
 dev.off()
