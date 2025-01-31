@@ -20,14 +20,17 @@ library(aplot)
 library(enrichplot)
 library(ggpubr)
 
+##### Replace with your working directory
 setwd('C:/polina/analysis/pderevianko/runx1eto-kd-aml/bulkRNA/')
 
-##### output directory
+##### output directory (inside the working directory)
 out_dir <- 'out/'
 
 set.seed(2023)
 
 kdmm_palette <- c('KD' = '#f41626', 'MM'= '#2538a5')
+
+##### color blind-friendly color palette
 cbPalette2 <- colorBlindness::paletteMartin
 names(cbPalette2) <- NULL
 cbPalette2 <- c(cbPalette2[3:9], cbPalette2[11:15])
@@ -157,20 +160,22 @@ counts$GeneName <- NULL
 coldata <- data.frame('condition' = as.factor(c(rep('KD',3), rep('MM',3))))
 rownames(coldata) <- colnames(counts)
 
-## 2.4. Save the DESeq2 input --------------------------------------------------
-write.csv(counts, paste0(out_dir, '010_rawCounts.csv'))
-write.csv(coldata, paste0(out_dir, '011_coldata.csv'))
-
 # 3. DESeq2 ====================================================================
+
+## 3.1. Run --------------------------------------------------------------------
 deseq_data <- DESeqDataSetFromMatrix(countData = counts,
                                      colData = coldata,
                                      design = ~ condition)
 deseq_data$condition <- factor(deseq_data$condition, levels = c('MM', 'KD'))
 dds <- DESeq(deseq_data)
+
+## 3.2. Save results (not provided in the paper materials) ---------------------
 saveRDS(dds, paste0(out_dir, '015_deseq2_out.rds'))
 ##### dds <- readRDS(paste0(out_dir, '015_deseq2_out.rds'))
 
 # 4. Transformations and filtering of DESeq2 output ============================
+
+## 4.1. Make a data frame with DESeq2 output (Suppl. Table 5) ------------------
 res <- results(dds)
 
 res_df <- as.data.frame(res) %>% 
@@ -180,7 +185,10 @@ res_df$Row.names <- NULL
 
 write.csv(res_df, paste0(out_dir, '020_deseq2_out.csv'))
 
+## 4.2. Transform --------------------------------------------------------------
 rld <- rlog(dds, blind = FALSE)
+
+## 4.3. Calculate z-scores -----------------------------------------------------
 z <- t(apply(assay(rld), 1, scale)) 
 colnames(z) <- colnames(rld)
 
@@ -203,7 +211,7 @@ colnames(means) <- 'AveExpr'
 
 # 5. Visualize DESeq2 results ==================================================
 
-## 5.1. PCA plot for differences between replicates (Suppl. Figure 2a) ---------
+## 5.1. PCA plot for differences between replicates (Suppl. Figure 2C) ---------
 pdf(paste0(out_dir, '030_rld_PCA.pdf'), height = 5, width = 5)
 plotPCA(rld, intgroup = 'condition') +
   geom_point(size = 3) +
@@ -215,7 +223,7 @@ plotPCA(rld, intgroup = 'condition') +
   theme(legend.position = 'bottom')
 dev.off()
 
-## 5.2. Heatmap of z-scores for top and bottom 50 DE-genes (Figure 2a) ---------
+## 5.2. Heatmap of z-scores for top and bottom 50 DE-genes (Figure 2B) ---------
 
 ### 5.2.1. Color palettes
 col_z <- colorRamp2(seq(min(z_sel), max(z_sel), length.out = nrow(z_sel)), 
@@ -262,7 +270,7 @@ dev.off()
 
 ## 5.3. Volcano plots ----------------------------------------------------------
 
-### 5.3.1. Volcano plot with all genes labelled (Suppl. Figure 2b)
+### 5.3.1. Volcano plot with all genes labelled (Suppl. Figure 2F)
 pdf(paste0(out_dir, '050_volcano_allGenesLabeled.pdf'),
     width = 8,
     height = 8)
@@ -284,7 +292,7 @@ EnhancedVolcano(res_ex,
 )
 dev.off()
 
-### 5.3.2. Volcano plot with target genes of RUNX1::RUNX1T1 and differentiation markers (Figure 2b)
+### 5.3.2. Volcano plot with target genes of RUNX1::RUNX1T1 and differentiation markers (Figure 2C)
 genes_of_interest <- c('CD34',
                        'LINC01257',
                        'ANGPT1',
@@ -308,6 +316,7 @@ genes_of_interest <- c('CD34',
                        'PLAC8',
                        'CTSG',
                        'PRG2',
+                       'PRG3',
                        'CLC',
                        'ABCA13',
                        'CYBB',
@@ -331,8 +340,10 @@ genes_of_interest <- c('CD34',
                        'FCRL1',
                        'FCRL2',
                        'MYBPH',
-                       'CA9')
-
+                       'CA9',
+                       'FUT7',
+                       'MPO',
+                       'VSIR')
 
 pdf(paste0(out_dir, '060_volcano_REtargetGenes_diffMarkers.pdf'),
     width = 8,
