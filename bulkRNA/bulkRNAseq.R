@@ -661,3 +661,8 @@ plotlist <- append(plotlist1, plotlist2)
 svg(paste0(out_dir, '160_gseaPlots_againstCellines.svg'))
 ggarrange(plotlist = plotlist, ncol = 2, nrow = 2)
 dev.off()
+
+# 99. Session info =============================================================
+sink(paste0(out_dir, '999_sessionInfo.txt'))
+sessionInfo()
+sink()
