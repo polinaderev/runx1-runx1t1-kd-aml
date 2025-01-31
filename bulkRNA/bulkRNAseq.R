@@ -479,6 +479,8 @@ dev.off()
 # 7. Compare with the RNAseq results of Kasumi-1 and SKNO-1 ====================
 
 ## 7.1. Read in the RNAseq results of Kasumi-1 and SKNO-1 ----------------------
+
+##### These input files are from Issa et al 2023 and are available at https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE217113
 cellines_df <- read_excel('in/LNP_K1_S1_RNAseq.xlsx', sheet = 'All')
 
 cellines_samplenames <- c('K1_mm_rep1', 'K1_kd_rep1', 
@@ -560,42 +562,15 @@ res_cellines_df <- lapply(names(res_cellines), function(celline_name){
 })
 names(res_cellines_df) <- names(res_cellines)
 
-csv_names <- paste0(rep('120_deseq2_out_', 2), names(res_cellines_df), rep('.csv', 2))
-map2(res_cellines_df, csv_names,
-     ~ write.csv(.x, paste0(out_dir, .y)))
-
 res_ex_cellines <- map(res_cellines_df, ~ drop_na(.x, log2FoldChange, padj))
 
-## 7.8. Vizualize the DESeq2 results of the cell lines -------------------------
-pdf(paste0(out_dir, '130_volcano_allGenesLabeled_cellines.pdf'), 
-    width = 15, 
-    height = 15)
-map2(res_ex_cellines, names(res_ex_cellines),
-    ~ EnhancedVolcano(.x,
-                      lab = rownames(.x),
-                      x = 'log2FoldChange',
-                      y = 'padj',
-                      pCutoff = 10e-3,
-                      FCcutoff = 2,
-                      drawConnectors = TRUE,
-                      arrowheads = FALSE,
-                      boxedLabels = TRUE,
-                      col = c('#444444','#444444', cbPalette2[7], cbPalette2[2]),
-                      colAlpha = 1,
-                      pointSize = 1,
-                      labSize = 2,
-                      title = .y,
-                      subtitle = NULL
-    ))
-dev.off()
-
-## 7.9. Filter the DESeq2 output for the cell lines for significance and log2FC ----
+## 7.8. Filter the DESeq2 output for the cell lines for significance and log2FC ----
 res_cellines_filt <- lapply(res_ex_cellines, function(df){
   df_new <- df %>% dplyr::filter(padj < 0.05 & abs(log2FoldChange) > 1)
   return(df_new)
 })
 
-## 7.10. Split to down- and upregulated genes
+## 7.9. Split to down- and upregulated genes
 res_cellines_split <- lapply(res_cellines_filt, function(df){
   sublist <- list(
     'up' = dplyr::filter(df, log2FoldChange > 0),
@@ -603,7 +578,7 @@ res_cellines_split <- lapply(res_cellines_filt, function(df){
   )
 })
 
-## 7.11. Extract the names of the genes that are substantially & significantly differentially expressed in each of the cellines ----
+## 7.10. Extract the names of the genes that are substantially & significantly differentially expressed in each of the cellines ----
 cellines_genesets <- lapply(res_cellines_split, function(sublist){
   sublist_new <- lapply(sublist, function(df){
     vec <- rownames(df)
@@ -642,13 +617,10 @@ gsea_res_cellines <- map(cellines_genesets, ~GSEA(
   TERM2GENE = .x
 ))
 
-csv_names <- paste0('150_gsea_res_againstCellines_', names(gsea_res_cellines), '.csv')
-map2(gsea_res_cellines, csv_names, ~write.csv(.x, paste0(out_dir, .y)))
-
 saveRDS(gsea_res_cellines, paste0(out_dir, '151_gsea_res_againstCellines.rds'))
 ##### gsea_res_cellines <- readRDS(paste0(out_dir, '151_gsea_res_againstCellines.rds'))
 
-## 6.4. Vizualize GSEA results in a bulk manner --------------------------------
+## 7.12. Vizualize GSEA results in a bulk manner -------------------------------
 pdf(paste0(out_dir, '160_gseaPlots_againstCellines.pdf'), width = 11, height = 11)
 plotlist1 <- map(c('Kasumi-1_up', 'Kasumi-1_dn'),
                 function(celline_name){
