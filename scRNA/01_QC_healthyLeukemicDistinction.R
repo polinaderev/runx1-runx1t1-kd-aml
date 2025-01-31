@@ -14,7 +14,7 @@ cbPalette2 <- colorBlindness::paletteMartin
 names(cbPalette2) <- NULL
 cbPalette2 <- c(cbPalette2[3:9], cbPalette2[11:15], "#999999")
 
-##### Directory for outputs:
+##### Directory for outputs (replace with your directory for outputs):
 wd <- 'repos/runx1eto-kd-aml/scRNA/out/'
 
 ##### reproducibility
@@ -23,6 +23,8 @@ set.seed(42)
 # 1. Load in data ==============================================================
 
 ## 1.1. UMI and HTO count matrix (from cellranger count output) ----------------
+
+##### If you wish to reproduce this part of the analysis, you'll have to run Cellranger yourself. Our FASTQs for this are available on EGA.
 in_dir <- 'EX113_LS/deep/01_cellranger/'
 patient_name <- c('A', 'B', 'C')
 
@@ -44,6 +46,7 @@ rownames(seu[['patientC']][['htos']])[rownames(seu[['patientC']][['htos']]) == '
 rownames(seu[['patientC']][['htos']])[rownames(seu[['patientC']][['htos']]) == 'hto9-re'] <- 'hto-kd' ##### kd = RUNX1/ETO knockdown
 
 ## 1.2. SoupOrCell donor info (from souporcell output) -------------------------
+##### If you wish to reproduce this part of the analysis, you'll have to run Souporcell yourself. Our FASTQs for this are available on EGA.
 in_dir <- 'EX113_LS/deep/02_souporcell/'
 patient_name <- c('A', 'B', 'C')
 
@@ -141,7 +144,7 @@ seu <- lapply(seu, function(seuObj){
   return(seuObj)
 })
 
-### 2.6.1. 010 HTO ridgeplot (plot not included in the paper)
+### 2.6.1. HTO ridgeplot (plot not included in the paper)
 pdf(paste0(wd, '010_HTO_ridgeplot.pdf'), height = 3)
 map2(seu, names(seu),
      ~ RidgePlot(.x, 
@@ -151,7 +154,7 @@ map2(seu, names(seu),
        plot_annotation(title = .y))
 dev.off()
 
-### 2.6.2. 020 Pairs of HTO signals to confirm mutual exclusivity in singlets (plot not included in the paper)
+### 2.6.2. Pairs of HTO signals to confirm mutual exclusivity in singlets (plot not included in the paper)
 pdf(paste0(wd, '020_HTO_scatter.pdf'))
 map2(seu, names(seu),
      ~ FeatureScatter(.x, 
@@ -161,7 +164,7 @@ map2(seu, names(seu),
        plot_annotation(title = .y))
 dev.off()
 
-### 2.6.3. 030 Compare number of UMIs for singlets, doublets and negative cells (plot not included in the paper) 
+### 2.6.3. Compare number of UMIs for singlets, doublets and negative cells (plot not included in the paper) 
 seu <- lapply(seu, function(seuObj){
   Idents(seuObj) <- 'HTO_classification.global'
   return(seuObj)
@@ -177,7 +180,7 @@ map2(seu, names(seu),
        plot_annotation(title = .y))
 dev.off()
 
-### 2.6.4. 040 HTO heatmap (plot not included in the paper)
+### 2.6.4. HTO heatmap (plot not included in the paper)
 pdf(paste0(wd, "040_HTO_heatmap.pdf"))
 map2(seu, names(seu),
      ~ HTOHeatmap(.x, 
@@ -186,7 +189,7 @@ map2(seu, names(seu),
     plot_annotation(title = .y))
 dev.off()
 
-### 2.6.5. 050 Preliminary RNA UMAP colored by HTO assignment (plot not included in the paper)
+### 2.6.5. Preliminary RNA UMAP colored by HTO assignment (plot not included in the paper)
 seu <- lapply(seu, function(seuObj){
   DefaultAssay(seuObj) <- 'RNA'
   return(seuObj)
@@ -206,7 +209,7 @@ map2(seu, names(seu),
        plot_annotation(title = .y))
 dev.off()
 
-### 2.6.6. 060 RNA UMAP colored by souporcell assignment (doublet, singlet or negative) (plot not included in the paper)
+### 2.6.6. RNA UMAP colored by souporcell assignment (doublet, singlet or negative) (plot not included in the paper)
 pdf(paste0(wd, "060_rna_umap_bySoup.pdf"))
 map2(seu, names(seu),
      ~ DimPlot(.x,
@@ -215,7 +218,7 @@ map2(seu, names(seu),
        plot_annotation(title = .y))
 dev.off()
 
-### 2.6.7. 070 RNA UMAP colored by souporcell assignment (which donor) (plot not included in the paper)
+### 2.6.7. RNA UMAP colored by souporcell assignment (which donor) (plot not included in the paper)
 pdf(paste0(wd, "070_rna_umap_bySoupAssignment.pdf"))
 map2(seu, names(seu),
      ~ DimPlot(.x,
@@ -233,7 +236,7 @@ seu <- lapply(seu, function(obj){
 
 ## 2.8. Vizualize the filtered object ------------------------------------------
 
-### 2.8.1. 080 RNA UMAP colored by HTO assignment (plot not included in the paper)
+### 2.8.1. RNA UMAP colored by HTO assignment (plot not included in the paper)
 pdf(paste0(wd, "080_filt_rna_umap_byHTO.pdf"))
 map2(seu, names(seu),
      ~ DimPlot(.x,
@@ -242,7 +245,7 @@ map2(seu, names(seu),
        plot_annotation(title = .y))
 dev.off()
 
-### 2.8.2. 090 RNA UMAP colored by souporcell assignment (doublet, singlet or negative) (plot not included in the paper)
+### 2.8.2. RNA UMAP colored by souporcell assignment (doublet, singlet or negative) (plot not included in the paper)
 pdf(paste0(wd, "090_filt_rna_umap_bySoup.pdf"))
 map2(seu, names(seu),
      ~ DimPlot(.x,
@@ -251,7 +254,7 @@ map2(seu, names(seu),
        plot_annotation(title = .y))
 dev.off()
 
-### 2.8.3. 100 RNA UMAP colored by souporcell assignment (which donor) (plot not included in the paper)
+### 2.8.3. RNA UMAP colored by souporcell assignment (which donor) (plot not included in the paper)
 pdf(paste0(wd, "100_filt_rna_umap_bySoupAssignment.pdf"))
 map2(seu, names(seu),
      ~ DimPlot(.x,
@@ -485,7 +488,7 @@ dev.off() #ITGAM = CD11b, FNT5E = CD73, THY1 = CD90
 
 # ---
 
-### 4.4.4. UMAP by cell cycle stage (Supplementary Figure 4E)
+### 4.4.4. UMAP by cell cycle stage (Supplementary Figure 4D)
 p <- map2(seu, names(seu),
           ~ DimPlot(.x,
                     reduction = "umap",
@@ -542,7 +545,7 @@ seu[['patientC']] <- FindNeighbors(seu[['patientC']], dims = 1:19)
 
 seu <- map(seu, ~ FindClusters(.x, resolution = 0.25, graph.name = 'SCT_snn'))
 
-## 6.2. Vizualize clustering (plot not included in the paper) ------------------
+## 6.2. Vizualize clustering (Figure 4B) ---------------------------------------
 
 p <- map2(seu, names(seu),
            ~ DimPlot(.x,
@@ -627,10 +630,7 @@ saveRDS(seu_leukemic, paste0(wd, '300_seu_leukemic.rds'))
 
 saveRDS(seu, paste0(wd, '305_seu_complete.rds'))
 
-# 7. Session info ==============================================================
+# 99. Session info =============================================================
 sink(paste0(wd, '999_sessionInfo_1.txt'))
 sessionInfo()
 sink()
-
-# 8. Clean the environment =====================================================
-rm(list = ls())
