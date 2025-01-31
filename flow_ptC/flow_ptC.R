@@ -164,9 +164,7 @@ dat_downsampled <- cbind(dat_downsampled, as.data.frame(pca_out$ind$coord)) %>%
                           dplyr::rename(PC1 = Dim.1,
                                         PC2 = Dim.2)
 
-## 4.3. Plot PCA ---------------------------------------------------------------
-
-### 4.3.1. Colored by condition (knockdown or mismatch control)
+## 4.3. Plot PCA (not included in the paper) -----------------------------------
 pdf(paste0(wd, '040_PCA_scaledToVariance_byCond.pdf'), height = 4, width = 6)
 ggplot(dat_downsampled %>% sample_frac(),
        aes(x = PC1, y = PC2, color = condition)) +
@@ -198,7 +196,7 @@ saveRDS(dat_downsampled, paste0(wd, '990_data_forPlotting.rds'))
 
 ## 4.3. Plot tSNE -------------------------------------------------------------- 
 
-### 4.3.1. Colored by condition
+### 4.3.1. Colored by condition (not included in the paper)
 pdf(paste0(wd, '046_tSNE_byCond.pdf'), height = 4, width = 6)
 ggplot(dat_downsampled %>% sample_frac(),
        aes(x = tSNE1, y = tSNE2, color = condition)) +
@@ -210,7 +208,7 @@ ggplot(dat_downsampled %>% sample_frac(),
         axis.ticks = element_blank())
 dev.off()
 
-### 4.3.4. Colored by expression of markers, split by condition
+### 4.3.4. Colored by expression of markers, split by condition (Figure 6E)
 pdf(paste0(wd, '051_tSNE_byMarkers.pdf'),
       height = 10, width = 10)
   
@@ -245,90 +243,6 @@ pdf(paste0(wd, '051_tSNE_byMarkers.pdf'),
   myplot <- ggarrange(plotlist = plotlist, ncol = 3, nrow = 3)
   print(myplot)
   dev.off()
-
-# 5. Density plots for markers =================================================
-pdf(paste0(wd, '060_density_byMarkers.pdf'),
-      height = 4, width = 10)
-  
-  plotlist <- map(marker_cols, function(marker){
-    p <- ggplot(dat_downsampled,
-                aes(x = !!sym(marker), fill = condition, color = condition)) +
-      geom_density(alpha = 0.4, size = 0.5) +
-      theme_bw() +
-      theme(legend.position = 'none') +
-      scale_fill_manual(values = kdmm_palette) +
-      scale_color_manual(values = kdmm_palette) +
-      xlab(paste0(marker, ' scaled intensity'))
-  })
-  names(plotlist) <- marker_cols
-  myplot <- ggarrange(plotlist = plotlist, ncol = 3, nrow = 3)
-  print(myplot)
-  dev.off()
-
-# # 6. Plot the 'double exposure' tSNEs for CD34 and CD38 ========================
-# dat_downsampled <- lapply(names(samples_for_analysis), function(patient){
-#   df <- dat_downsampled[[patient]]
-#   
-#   df$CD34_adj <- df[, 'CD34-APC'] - thresholds_scaled[[patient]]['CD34-APC']
-#   df$CD34_adj[df$CD34_adj < 0] <- 0
-#   max_cd34 <- max(df$CD34_adj)
-#   df$CD34_adj <- df$CD34_adj/max_cd34
-#   
-#   df$CD38_adj <- df[, 'CD38-PE_Dazzle594'] - thresholds_scaled[[patient]]['CD38-PE_Dazzle594']
-#   df$CD38_adj[df$CD38_adj < 0] <- 0
-#   max_cd38 <- max(df$CD38_adj)
-#   df$CD38_adj <- df$CD38_adj/max_cd38
-#   
-#   df$cd34_38_color <- mapply(function(x,y) rgb(0, x, y), df$CD34_adj, df$CD38_adj)
-#   return(df)
-# })
-# names(dat_downsampled) <- names(samples_for_analysis)
-# 
-# saveRDS(dat_downsampled, paste0(wd, '990_data_forPlotting.rds'))
-# ##### dat_downsampled <- readRDS(paste0(wd, '990_data_forPlotting.rds'))
-# 
-# pdf(paste0(wd, '070_tSNE_CD34-38_doubleExposure.pdf'),
-#     height = 5.5, width = 6)
-# 
-# ##### manual legend
-# legend_space <- expand.grid(CD38 = seq(0, 1, length.out = 10),
-#                            CD34 = seq(0, 1, length.out = 10))
-# legend_space$color <- apply(legend_space, 1, function(x){
-#   rgb(0, x[2], x[1], maxColorValue = 1)
-# })
-# 
-# legend_plot <- ggplot(legend_space,
-#                       aes(x = CD38, y = CD34, fill = I(color))) +
-#   geom_tile() +
-#   coord_fixed() +
-#   theme_bw() +
-#   labs(x = 'CD38 scaled expression',
-#        y = 'CD34 scaled expression')
-# 
-# tsne_de_list <- lapply(sample_names, function(patient){
-#   tsne <- ggplot(dat_downsampled[[patient]],
-#               aes(x = tSNE1, y = tSNE2, color = I(cd34_38_color))) +
-#     geom_point(size = 0.1) +
-#     facet_grid(condition ~ .,
-#                labeller = as_labeller(c(
-#                  'RUNX1::RUNX1T1 knockdown' = 'RUNX1::RUNX1T1 KD',
-#                  'mismatch control' = 'mismatch control'
-#                ))) +
-#     theme_bw() +
-#     ggtitle(patient) +
-#     theme(axis.text.x = element_blank(),  
-#           axis.text.y = element_blank(),  
-#           axis.ticks = element_blank())
-#   
-#   p <- ggarrange(tsne, legend_plot, nrow = 1, ncol = 2)
-#   return(p)
-# })
-# 
-# names(tsne_de_list) <- sample_names
-# 
-# print(tsne_de_list)
-# 
-# dev.off()
 
 # 99. Session info =============================================================
 sink(paste0(wd, '999_sessionInfo.txt'))
