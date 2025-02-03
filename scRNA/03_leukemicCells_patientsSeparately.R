@@ -40,7 +40,7 @@ set.seed(42)
 ##### A similar Seurat object (just supplemented with what this script adds to that object) is available at https://doi.org/10.5281/zenodo.14578307.
 seu_leukemic <- readRDS(paste0(wd, '300_seu_leukemic.rds'))
 
-## 1.2. UMAP by condition (Figure 4B) ------------------------------------------
+## 1.2. UMAP by condition (Figure 4C) ------------------------------------------
 pdf(paste0(wd, "330_leukemicOnly_umap_byCond.pdf"), height = 3.5, width = 8)
 p <- map2(seu_leukemic, names(seu_leukemic),
           ~ DimPlot(.x, 
@@ -53,7 +53,7 @@ p <- map2(seu_leukemic, names(seu_leukemic),
 ggarrange(plotlist = p, ncol = 3, common.legend = TRUE, legend = 'bottom')
 dev.off()
 
-## 1.3. Violin plots of RUNX1T1 and  RUNX1::RUNX1T1 target genes (Figure 4D) ----
+## 1.3. Violin plots of RUNX1T1 and  RUNX1::RUNX1T1 target genes (Figure 4H) ----
 
 ### 1.3.1. Preparations
 genes_of_interest <- c('RUNX1T1', 'CD34', 'NFE2')
@@ -78,7 +78,7 @@ seu_leukemic <- lapply(seu_leukemic, function(seuObj){
   return(seuObj)
 })
 
-### 1.3.2. Vector plot
+### 1.3.2. Plot
 p <- map(seu_leukemic,
          ~ VlnPlot(.x %>% subset(downsample = 2000), 
                    features = genes_of_interest,
