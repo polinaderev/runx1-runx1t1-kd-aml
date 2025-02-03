@@ -26,8 +26,8 @@ zengPalette <- c('B' = "#FFA500", 'Plasma Cell' = "#C1BC00", 'Plasma_Cell' = "#C
                  'Naive T' = "#809999", 'NK' = "#7B68EE", 'pDC' = "#5A9DFF", 'Pre-B' = "#6B8E23", 'Pro-B' = "#A5531C",
                  'Pro-Monocyte' = "#FF4856")
 
-##### Directory for outputs:
-wd <- 'repos/runx1eto-kd-aml/scRNA/out/'
+##### Directory for outputs (replace with your directory):
+wd <- 'repos/runx1-runx1t1-kd-aml/scRNA/out/'
 
 ##### reproducibility
 set.seed(42)
