@@ -36,7 +36,8 @@ set.seed(42)
 
 ## 1.1. Load in data (Seurat object with leukemic cells) -----------------------
 
-##### Seurat object with leukemic cells
+##### Generated in 01_QC_healthyLeukemicDistinction.R. 
+##### A similar Seurat object (just supplemented with what this script adds to that object) is available at https://doi.org/10.5281/zenodo.14578307.
 seu_leukemic <- readRDS(paste0(wd, '300_seu_leukemic.rds'))
 
 ## 1.2. UMAP by condition (Figure 4B) ------------------------------------------
