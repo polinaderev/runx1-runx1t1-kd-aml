@@ -806,51 +806,6 @@ FeaturePlot(seu_integr,
 
 dev.off()
 
-# 12. GSEA for IFNG response ===================================================
-## 12.1. Get the gene set -------------------------------------------------------
-pathways <- msigdbr(species = 'Homo sapiens', category = 'H')
-goi <- pathways %>%
-  select(gs_name, gene_symbol)
-
-## 12.2. Make ranks ------------------------------------------------------------
-markers_cond_filt <- markers_cond %>%
-  filter(pct.1 + pct.2 > 0.01) ##### filter out genes whose expression is low
-ranks <- markers_cond_filt$avg_log2FC
-names(ranks) <- rownames(markers_cond_filt)
-ranks <- ranks[!is.na(ranks)] %>% 
-  sort(decreasing = TRUE) ##### sorting is required for ClusterProfiler
-
-## 12.3. Run GSEA --------------------------------------------------------------
-gsea_res <- GSEA(
-  geneList = ranks,
-  maxGSSize = 2000,
-  pvalueCutoff = 1,
-  eps = 0,
-  pAdjustMethod = 'BH',
-  seed = TRUE,
-  TERM2GENE = goi
-)
-
-## 12.4. Vizualize GSEA results -------------------------------------------------
-pdf(paste0(wd, '660_integr_gseaPlots_OlafsRanks_hallmarks.pdf'), width = 10, height = 10)
-plotlist <- lapply(paste0(unique(goi$gs_name)), function(geneset_name){
-  p <- enrichplot::gseaplot(
-    gsea_res,
-    geneSetID = geneset_name,
-    title = paste0('Integrated ptABC', ', ', geneset_name),
-    color.line = '#21908c') %>%
-    as.patchwork()
-  p <- p + plot_annotation(subtitle = paste0(
-    'NES = ', as.character(signif(gsea_res@result$NES[gsea_res@result$ID == geneset_name], digits = 3)),
-    ', padj = ', as.character(signif(gsea_res@result$p.adjust[gsea_res@result$ID == geneset_name], digits = 3))
-  ))
-  return(p)
-})
-for (i in 1:length(plotlist)){
-  print(plotlist[[i]])
-}
-dev.off()
-
 # 13. Make supplementary tables 6 and 7 ========================================
 
 ## 13.1. Supplementary table 6: markers RE vs MM -------------------------------
