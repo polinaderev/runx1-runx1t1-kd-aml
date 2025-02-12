@@ -133,13 +133,15 @@ saveRDS(markers, paste0(wd, '328_leukemic_allMarkers_KDvsMM.rds'))
 
 # 3. Compare the DE genes between scRNAseq and bulk RNAseq =====================
 
-## 3.2. Prepare the names of significantly and substantially expressed genes from the bulk RNAseq ----
+## 3.1. Prepare the names of significantly and substantially expressed genes from the bulk RNAseq ----
 
-### 3.2.1. Load in the DESeq2 output of the bulk RNAseq of the PDX
+### 3.1.1. Load in the DESeq2 output of the bulk RNAseq of the PDX
+##### Generated in this study in bulkRNA/bulkRNAseq.R
+
 res_bulk <- read_delim('repos/runx1eto-kd-aml/bulkRNA/out/020_deseq2_out.csv') %>%
   rename (gene = `...1`)
 
-### 3.2.2. Filter the bulk RNAseq results by significance and log2FC
+### 3.1.2. Filter the bulk RNAseq results by significance and log2FC
 res_bulk_filt <- res_bulk %>%
   dplyr::filter(padj < 0.05 & !is.na(padj) & abs(log2FoldChange) > 2)
 
@@ -157,7 +159,7 @@ gsea_in_geneset <- data.frame(
   'gene_symbol' = c(bulk_up$gene, bulk_dn$gene)
 )
 
-## 3.3. Prepare the ranks of DE genes from scRNAseq ----------------------------
+## 3.2. Prepare the ranks of DE genes from scRNAseq ----------------------------
 ranks <- lapply(markers, function(df){
   df_filt <- df %>% filter(pct.1 + pct.2 > 0.01) ##### filter out genes whose expression is low
   ranks <- df_filt$avg_log2FC
@@ -167,7 +169,7 @@ ranks <- lapply(markers, function(df){
   return(ranks)
 })
 
-## 3.4. Run GSEA ---------------------------------------------------------------
+## 3.3. Run GSEA ---------------------------------------------------------------
 gsea_res <- map(ranks, ~ GSEA(
   geneList = .x,
   maxGSSize = 2000,
@@ -184,7 +186,7 @@ map2(gsea_res, csv_names, ~ write.csv(.x, paste0(wd, .y)))
 saveRDS(gsea_res, paste0(wd, '343_gsea_res_againstBulk.rds'))
 gsea_res <- readRDS(paste0(wd, '343_gsea_res_againstBulk.rds'))
 
-## 3.5. Vizualize GSEA results (Suppl. Figure 4D) ------------------------------
+## 3.4. Vizualize GSEA results (Suppl. Figure 4F) ------------------------------
 pdf(paste0(wd, '344_gseaPlots_againstBulk.pdf'), width = 10, height = 10)
 plotlist <- lapply(names(gsea_res), function(sample_name){
   sublist <- lapply(paste0('bulkRNAseq patient C (PDX), ', c('upregulated', 'downregulated')), function(geneset_name){
@@ -228,26 +230,6 @@ seu_leukemic <- lapply(seu_leukemic, function(seuObj){
 })
 
 ## 4.2. Plot pediatric LSC6 module score ---------------------------------------
-
-### 4.2.1. UMAP (Figure 5H)
-pdf(paste0(wd, '350_leukemicOnly_umap_pediatricLSC6.pdf'), width = 12, height = 3)
-p <- map2(seu_leukemic, names(seu_leukemic),
-          ~ FeaturePlot(.x,
-                        features = "LSC6",
-                        order = TRUE,
-                        split.by = 'condition',
-                        keep.scale = 'feature') &
-            theme(axis.line = element_blank(),
-                  axis.text.x = element_blank(),
-                  axis.text.y = element_blank(),
-                  axis.ticks = element_blank(),
-                  axis.title.x = element_blank(),
-                  axis.title.y = element_blank(),
-                  legend.position = 'bottom') &
-            labs(title = NULL) &
-            plot_annotation(title = .y))
-ggarrange(plotlist = p, ncol = 3)
-dev.off()
 
 ### 4.2.2. Violin (Figure 5I)
 
