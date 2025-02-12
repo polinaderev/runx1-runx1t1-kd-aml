@@ -373,16 +373,17 @@ dev.off()
 
 # 7. Low resolution clustering analysis (superclusters) ========================
 
-## 7.1. Cluster and split by condition -----------------------------------------
+## 7.1. Cluster and split by condition and by supercluster ---------------------
 DefaultAssay(seu_integr) <- 'integrated'
 
 seu_integr <- FindClusters(seu_integr, resolution = 0.025)
 
-seu <- SplitObject(seu_integr, split.by = 'condition')
+seu_cond <- SplitObject(seu_integr, split.by = 'condition')
+seu_superclust <- SplitObject(seu_integr, split.by = 'integrated_snn_res.0.025')
 
 ## 7.2. Plot the superclusters (Figure 6C) -------------------------------------
 pdf(paste0(wd, '560_integr_umap_2clust.pdf'), width = 3, height = 3.5)
-map2(seu, names(seu),
+map2(seu_cond, names(seu_cond),
      ~ DimPlot(.x,
                reduction = 'umap',
                group.by = 'integrated_snn_res.0.025',
@@ -395,16 +396,16 @@ dev.off()
 
 ## 7.3. Boxplot by cell type prediction confidence by supercluster (Figure 6E) -----
 pdf(paste0(wd, '570_integr_box_by2Clust_ZengScore.pdf'), height = 2.5, width = 2.5)
-map2(seu, names(seu),
+map2(seu_superclust, names(seu_superclust),
      ~ ggplot(.x@meta.data, 
-              aes(x = integrated_snn_res.0.025, 
+              aes(x = condition, 
                   y = pred.Zeng.score, 
-                  fill = integrated_snn_res.0.025, 
-                  colour = integrated_snn_res.0.025)) +
+                  fill = condition, 
+                  colour = condition)) +
        geom_violin() +
        geom_boxplot(width = 0.1) +
        theme_minimal() +
-       scale_fill_manual(values = c(cbPalette[6], cbPalette[7])) +
+       scale_fill_manual(values = kdmm_palette) +
        scale_color_manual(values = c('black', 'black')) +
        labs(y = 'Zeng score',
             x = 'cluster',
@@ -422,9 +423,9 @@ map2(seu, names(seu),
 dev.off()
 
 ## 7.4. Proportions of phenotypes in supercluster I (Figure 6D left) ----------------
-seu_clust <- SplitObject(seu[['RUNX1::RUNX1T1 knockdown']], split.by = 'integrated_snn_res.0.025')
+seu_siRE_superclust <- SplitObject(seu_cond[['RUNX1::RUNX1T1 knockdown']], split.by = 'integrated_snn_res.0.025')
 
-celltype_counts <- dplyr::count(seu_clust[['0']]@meta.data, 
+celltype_counts <- dplyr::count(seu_siRE_superclust[['0']]@meta.data, 
                                 pred.Zeng.celltype) %>%
   mutate(condition = 'knockdown')
 
@@ -450,7 +451,7 @@ ggplot(celltype_counts,
 dev.off()
 
 ## 7.5. Proportions of phenotypes in supercluster II (Figure 6D right) ---------
-celltype_counts <- dplyr::count(seu_clust[['1']]@meta.data, 
+celltype_counts <- dplyr::count(seu_siRE_superclust[['1']]@meta.data, 
                                 pred.Zeng.celltype) %>%
   mutate(condition = 'knockdown')
 
@@ -478,7 +479,7 @@ dev.off()
 ## 7.7. Cell type module scores (calculated earlier, now plotted for KD only; Supplementary Figure 5B) -----
 pdf(paste0(wd, '600_integr_kd_umap_HayModuleScores_quantileColor.pdf'), height = 4, width = 3)
 map(names(mygenesets),
-    ~ FeaturePlot(seu[['RUNX1::RUNX1T1 knockdown']],
+    ~ FeaturePlot(seu_cond[['RUNX1::RUNX1T1 knockdown']],
                   features = .x,
                   order = FALSE,
                   max.cutoff = 'q95',
@@ -620,7 +621,7 @@ pdf(paste0(wd, '605_integr_umap_hiResClust.pdf'), width = 3, height = 3.5)
 map2(seu, names(seu),
      ~ DimPlot(.x,
                reduction = 'umap',
-               group.by = 'integrated_snn_res.0.5',
+               group.by = 'integrated_snn_res.0.57',
                cols = cbPalette2,
                label = TRUE) +
        theme_void() +
@@ -628,8 +629,8 @@ map2(seu, names(seu),
        theme(legend.position = 'none'))
 dev.off()
 
-## 8.3. Find top markers for each cluster (noit included in the paper) ---------
-Idents(seu_integr) <- 'integrated_snn_res.0.5'
+## 8.3. Find top markers for each cluster (not included in the paper) ---------
+Idents(seu_integr) <- 'integrated_snn_res.0.57'
 markers <- FindAllMarkers(seu_integr, 
                           assay = "RNA",
                           slot = "data",
@@ -649,7 +650,7 @@ markers <- dplyr::filter(markers, avg_log2FC > 0.1 & p_val_adj < 0.05) %>%
 
 pdf(paste0(wd, '620_integr_heatmap_hiResClust_markers.pdf'), height = 8, width = 5)
 DoHeatmap(seu_integr, 
-          group.by = 'integrated_snn_res.0.5',
+          group.by = 'integrated_snn_res.0.57',
           features = markers$gene,
           assay = "integrated",
           slot = "scale.data",
