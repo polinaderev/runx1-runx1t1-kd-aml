@@ -102,7 +102,7 @@ DimHeatmap(seu_integr,
            balanced = TRUE)
 dev.off()
 
-#### 2.2.2.3. Scatter plot of the first 2 PCs, colored by condition 
+#### 2.2.2.3. Scatter plot of the first 2 PCs, colored by condition (Supplementary Figure 4H)
 pdf(paste0(wd, '470_integr_pca_byCond.pdf'), height = 3.5, width = 3)
 DimPlot(seu_integr,
         reduction = 'pca',
@@ -125,7 +125,7 @@ saveRDS(seu_integr, paste0(wd, '475_leukemic_integrated.rds'))
 
 ### 2.2.4. Vizualize the UMAP
 
-#### 2.2.4.1. UMAP by condition 
+#### 2.2.4.1. UMAP by condition (Figure 4I)
 pdf(paste0(wd, '480_integr_umap_byCond.pdf'), height = 3.5, width = 3)
 DimPlot(seu_integr,
         reduction = 'umap',
@@ -136,7 +136,7 @@ DimPlot(seu_integr,
   theme(legend.position = 'bottom')
 dev.off()
 
-#### 2.2.4.2. UMAP by patient 
+#### 2.2.4.2. UMAP by patient (Figure 4J)
 pdf(paste0(wd, '490_integr_umap_byPt.pdf'), height = 3.5, width = 3)
 DimPlot(seu_integr,
         reduction = 'umap',
@@ -148,7 +148,7 @@ DimPlot(seu_integr,
   theme(legend.position = 'bottom')
 dev.off()
 
-#### 2.2.4.3. UMAP by cell cycle stage 
+#### 2.2.4.3. UMAP by cell cycle stage (Supplementary Figure 6E)
 pdf(paste0(wd, '500_integr_umap_byCellCycleStage.pdf'), height = 3.5, width = 3)
 DimPlot(seu_integr,
         reduction = 'umap',
@@ -164,6 +164,7 @@ dev.off()
 ## 3.1. Add predictions and their scores ---------------------------------------
 
 ### 3.1.1. Load the cell type predictions
+##### Produced in scRNA/03_leukemicCells_patientsSeparately.R
 preds <- readRDS(paste0(wd, '378_zengPreds.rds'))
 
 ### 3.1.2. Fix the cell names
