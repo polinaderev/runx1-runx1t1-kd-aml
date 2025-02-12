@@ -131,38 +131,6 @@ markers <- map(seu_leukemic,
 saveRDS(markers, paste0(wd, '328_leukemic_allMarkers_KDvsMM.rds'))
 ##### markers <- readRDS(paste0(wd, '328_leukemic_allMarkers_KDvsMM.rds'))
 
-## 2.2. Visualize --------------------------------------------------------------
-
-### 2.2.1. Venn diagram of common up- and downregulated genes (Figure 4C) ------
-
-#### 2.2.1.1. Preparation: split the DE genes to the positive and negative ones
-de_pos <- lapply(markers, function(tib){
-  tib$gene <- rownames(tib)
-  tib_pos <- dplyr::filter(tib, avg_log2FC > 0 & p_val_adj < 0.001)
-  genes_pos <- tib_pos$gene
-  return(genes_pos)
-})
-
-de_neg <- lapply(markers, function(tib){
-  tib$gene <- rownames(tib)
-  tib_neg <- dplyr::filter(tib, avg_log2FC < 0 & p_val_adj < 0.001)
-  genes_neg <- tib_neg$gene
-  return(genes_neg)
-})
-
-#### 2.2.1.2. Plot
-plotVenn(de_pos, 
-         showPlot = TRUE, 
-         systemShow = FALSE, 
-         outFile = paste0(wd, '332_leukemicOnly_venn_pos.svg'),
-         setColors = c(cbPalette[1], cbPalette[3], cbPalette[5]))
-
-plotVenn(de_neg, 
-         showPlot = TRUE, 
-         systemShow = FALSE, 
-         outFile = paste0(wd, '332_leukemicOnly_venn_neg.svg'),
-         setColors = c(cbPalette[1], cbPalette[3], cbPalette[5]))
-
 # 3. Compare the DE genes between scRNAseq and bulk RNAseq =====================
 
 ## 3.2. Prepare the names of significantly and substantially expressed genes from the bulk RNAseq ----
