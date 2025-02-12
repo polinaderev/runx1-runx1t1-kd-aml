@@ -706,7 +706,7 @@ print(plotlist[[1]])
 print(plotlist[[2]])
 dev.off()
 
-# 11. LSC 6 score ==============================================================
+# 11. LSC 6 score (Figure 7E) ==============================================================
 LSC_signature <- c("DNMT3B", "CD34", "ADGRG1", "SOCS2", "SPINK2", "FAM30A")
 
 seu_integr <- AddModuleScore(seu_integr, 
@@ -716,80 +716,7 @@ seu_integr <- AddModuleScore(seu_integr,
 
 seu_integr@meta.data <- rename(seu_integr@meta.data, LSC6 = LSC61)
 
-pdf(paste0(wd, '650_integr_umap_pediatricLSC6.pdf'), height = 3.5, width = 3)
-FeaturePlot(seu_integr,
-            features = "LSC6",
-            order = TRUE) +
-  theme(axis.line = element_blank(),
-        axis.text.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks = element_blank(),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        legend.position = 'bottom') +
-  labs(title = NULL)
-
-FeaturePlot(seu_integr,
-            features = "LSC6",
-            order = TRUE,
-            max.cutoff = 'q95',
-            min.cutoff = 'q5') +
-            theme(axis.line = element_blank(),
-                  axis.text.x = element_blank(),
-                  axis.text.y = element_blank(),
-                  axis.ticks = element_blank(),
-                  axis.title.x = element_blank(),
-                  axis.title.y = element_blank(),
-                  legend.position = 'bottom') +
-            labs(title = NULL)
-
-FeaturePlot(seu_integr,
-            features = "LSC6",
-            order = TRUE) +
-  scale_colour_viridis() +
-  theme(axis.line = element_blank(),
-        axis.text.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks = element_blank(),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        legend.position = 'bottom') +
-  labs(title = NULL)
-
-FeaturePlot(seu_integr,
-            features = "LSC6",
-            order = TRUE,
-            max.cutoff = 'q95',
-            min.cutoff = 'q5') +
-  scale_colour_viridis() +
-  theme(axis.line = element_blank(),
-        axis.text.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks = element_blank(),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        legend.position = 'bottom') +
-  labs(title = NULL)
-
-dev.off()
-
 pdf(paste0(wd, '651_integr_umap_byCond_pediatricLSC6.pdf'), height = 3.5, width = 6)
-FeaturePlot(seu_integr,
-            features = "LSC6",
-            order = TRUE,
-            split.by = 'condition') &
-  scale_colour_viridis(limits = c(min(seu_integr@meta.data$LSC6), 
-                                  quantile(seu_integr@meta.data$LSC6, probs = 0.95)),
-                       oob = scales::squish) &
-  theme(axis.line = element_blank(),
-        axis.text.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks = element_blank(),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        legend.position = 'bottom') &
-  labs(title = NULL)
-
 FeaturePlot(seu_integr,
             features = "LSC6",
             order = TRUE,
@@ -807,9 +734,9 @@ FeaturePlot(seu_integr,
 
 dev.off()
 
-# 13. Make supplementary tables 6 and 7 ========================================
+# 13. Make supplementary tables 7 and 8 ========================================
 
-## 13.1. Supplementary table 6: markers RE vs MM -------------------------------
+## 13.1. Supplementary table 7: markers RE vs MM -------------------------------
 markers <- readRDS(paste0(wd, '328_leukemic_allMarkers_KDvsMM.rds'))
 int <- readRDS(paste0(wd, '602_integr_markers_REKD_vs_MM.rds'))
 
@@ -831,7 +758,7 @@ markers_df <- markers[[1]] %>%
 
 write_csv(markers_df, paste0(wd, '680_allMarkers_allPatients_RE_vs_MM.csv'))
 
-## 13.2. Supplementary table 7: markers supercluster I vs II -------------------
+## 13.2. Supplementary table 8: markers supercluster I vs II -------------------
 full <- readRDS(paste0(wd, '601_integr_markers_clust0_vs_clust1.rds'))
 re <- readRDS(paste0(wd, '670_integr_REonly_markers_clust0_vs_clust1.rds'))
 
