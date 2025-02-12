@@ -231,7 +231,7 @@ seu_leukemic <- lapply(seu_leukemic, function(seuObj){
 
 ## 4.2. Plot pediatric LSC6 module score ---------------------------------------
 
-### 4.2.2. Violin (Figure 5I)
+### 4.2.1. Violin (Figure 7F)
 
 ##### plots to just get the p-values from
 p1 <- map(seu_leukemic,
