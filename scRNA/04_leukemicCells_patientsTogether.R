@@ -615,7 +615,7 @@ seu_integr <- FindClusters(seu_integr, resolution = 0.57)
 
 seu <- SplitObject(seu_integr, split.by = 'condition')
 
-## 8.2. Plot the clusters 
+## 8.2. Plot the clusters (Figure 5A) ------------------------------------------
 pdf(paste0(wd, '605_integr_umap_hiResClust.pdf'), width = 3, height = 3.5)
 map2(seu, names(seu),
      ~ DimPlot(.x,
@@ -628,7 +628,7 @@ map2(seu, names(seu),
        theme(legend.position = 'none'))
 dev.off()
 
-## 8.3. Find top markers for each cluster --------------------------------------
+## 8.3. Find top markers for each cluster (noit included in the paper) ---------
 Idents(seu_integr) <- 'integrated_snn_res.0.5'
 markers <- FindAllMarkers(seu_integr, 
                           assay = "RNA",
@@ -641,7 +641,7 @@ markers <- FindAllMarkers(seu_integr,
 saveRDS(markers, paste0(wd, '610_integr_highRes_markers.rds'))
 write_csv(markers, paste0(wd, '610_integr_highRes_markers.csv'))
 
-## 8.4. Plot a heatmap with top markers ----------------------------------------
+## 8.4. Plot a heatmap with top markers (Figure 5B) ----------------------------
 markers <- dplyr::filter(markers, avg_log2FC > 0.1 & p_val_adj < 0.05) %>%
   dplyr::filter(pct.1 > 0.1 | pct.2 > 0.1) %>%
   arrange(desc(avg_log2FC)) %>%
