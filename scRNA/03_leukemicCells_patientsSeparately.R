@@ -9,7 +9,6 @@ library(ggpubr)
 library(patchwork)
 library(viridis)
 library(aplot)
-library(nVennR)
 
 kdmm_palette <- c('RUNX1::RUNX1T1 knockdown' = '#f41626', 'mismatch control'= '#2538a5')
 
@@ -26,8 +25,8 @@ zengPalette <- c('B' = "#FFA500", 'Plasma Cell' = "#C1BC00", 'Plasma_Cell' = "#C
                  'Naive T' = "#809999", 'NK' = "#7B68EE", 'pDC' = "#5A9DFF", 'Pre-B' = "#6B8E23", 'Pro-B' = "#A5531C",
                  'Pro-Monocyte' = "#FF4856")
 
-##### Directory for outputs:
-wd <- 'repos/runx1eto-kd-aml/scRNA/out/'
+##### Directory for outputs (replace with your directory):
+wd <- 'repos/runx1-runx1t1-kd-aml/scRNA/out/'
 
 ##### reproducibility
 set.seed(42)
@@ -36,10 +35,11 @@ set.seed(42)
 
 ## 1.1. Load in data (Seurat object with leukemic cells) -----------------------
 
-##### Seurat object with leukemic cells
+##### Generated in 01_QC_healthyLeukemicDistinction.R. 
+##### A similar Seurat object (just supplemented with what this script adds to that object) is available at https://doi.org/10.5281/zenodo.14578307.
 seu_leukemic <- readRDS(paste0(wd, '300_seu_leukemic.rds'))
 
-## 1.2. UMAP by condition (Figure 4B) ------------------------------------------
+## 1.2. UMAP by condition (Figure 4C) ------------------------------------------
 pdf(paste0(wd, "330_leukemicOnly_umap_byCond.pdf"), height = 3.5, width = 8)
 p <- map2(seu_leukemic, names(seu_leukemic),
           ~ DimPlot(.x, 
@@ -52,7 +52,7 @@ p <- map2(seu_leukemic, names(seu_leukemic),
 ggarrange(plotlist = p, ncol = 3, common.legend = TRUE, legend = 'bottom')
 dev.off()
 
-## 1.3. Violin plots of RUNX1T1 and  RUNX1::RUNX1T1 target genes (Figure 4D) ----
+## 1.3. Violin plots of RUNX1T1 and  RUNX1::RUNX1T1 target genes (Figure 4H) ----
 
 ### 1.3.1. Preparations
 genes_of_interest <- c('RUNX1T1', 'CD34', 'NFE2')
@@ -77,7 +77,7 @@ seu_leukemic <- lapply(seu_leukemic, function(seuObj){
   return(seuObj)
 })
 
-### 1.3.2. Vector plot
+### 1.3.2. Plot
 p <- map(seu_leukemic,
          ~ VlnPlot(.x %>% subset(downsample = 2000), 
                    features = genes_of_interest,
@@ -113,66 +113,6 @@ pdf(paste0(wd, "340_leukemicOnly_vln_RUNX1-ETO_targetGenes.pdf"), height = 7, wi
 ggarrange(plotlist = patient_panels, ncol = 3, nrow = 1, common.legend = FALSE)
 dev.off()
 
-## 1.4. Violin plots of more genes ---------------------------------------------
-### 1.4.1. Preparations
-genes_of_interest <- c('HLA-DRA', 'HLA-DQA1', 'CIITA')
-
-##### find adjusted p-values for differential expression of genes of interest
-padj <- lapply(seu_leukemic, function(seuObj){
-  Idents(seuObj) <- 'condition'
-  de <- FindMarkers(seuObj,
-                    features = genes_of_interest,
-                    logfc.threshold = 0,
-                    min.pct = 0,
-                    ident.1 = 'RUNX1::RUNX1T1 knockdown',
-                    assay = 'RNA')
-  padj <- de$p_val_adj %>% signif(1)
-  names(padj) <- rownames(de)
-  padj <- c(padj[genes_of_interest[1]], padj[genes_of_interest[2]], padj[genes_of_interest[3]])
-  return(padj)
-})
-
-seu_leukemic <- lapply(seu_leukemic, function(seuObj){
-  Idents(seuObj) <- 'orig.ident'
-  return(seuObj)
-})
-
-### 1.4.2. Vector plot
-p <- map(seu_leukemic,
-         ~ VlnPlot(.x %>% subset(downsample = 2000), 
-                   features = genes_of_interest,
-                   split.by = 'condition',
-                   split.plot = TRUE,
-                   cols = c(kdmm_palette[2], kdmm_palette[1]),
-                   y.max = c(NA, NULL + 0.5),
-                   assay = 'RNA',
-                   combine = FALSE))
-
-p <- map2(p, padj, function(plots_sublist, padj_vector){
-  plots_sublist_new <- pmap(list(plots_sublist, padj_vector, names(padj_vector)), 
-                            function(plt, padj_value, gene_name){
-                              plt_new <- plt +
-                                ggtitle(NULL) +
-                                theme(legend.position = 'none',
-                                      axis.title.x = element_blank(),
-                                      axis.text.x = element_blank()) +
-                                labs(y = paste0('Expression level ', gene_name)) +
-                                geom_text(x = 1,
-                                          y = 1,
-                                          label = paste0('padj = ', as.character(padj_value)))
-                              return(plt_new)
-                            })
-  return(plots_sublist_new)  
-})
-
-patient_panels <- map(p, 
-                      ~ ggarrange(plotlist = .x, ncol = 1, nrow = 3, common.legend = TRUE, legend = 'bottom'))           
-
-
-pdf(paste0(wd, "341_leukemicOnly_vln_HLAgenes.pdf"), height = 7, width = 7)
-ggarrange(plotlist = patient_panels, ncol = 3, nrow = 1, common.legend = FALSE)
-dev.off()
-
 # 2. Differential expression analysis ==========================================
 
 ## 2.1. Find all DE genes between the 2 conditions -----------------------------
@@ -191,47 +131,17 @@ markers <- map(seu_leukemic,
 saveRDS(markers, paste0(wd, '328_leukemic_allMarkers_KDvsMM.rds'))
 ##### markers <- readRDS(paste0(wd, '328_leukemic_allMarkers_KDvsMM.rds'))
 
-## 2.2. Visualize --------------------------------------------------------------
-
-### 2.2.1. Venn diagram of common up- and downregulated genes (Figure 4C) ------
-
-#### 2.2.1.1. Preparation: split the DE genes to the positive and negative ones
-de_pos <- lapply(markers, function(tib){
-  tib$gene <- rownames(tib)
-  tib_pos <- dplyr::filter(tib, avg_log2FC > 0 & p_val_adj < 0.001)
-  genes_pos <- tib_pos$gene
-  return(genes_pos)
-})
-
-de_neg <- lapply(markers, function(tib){
-  tib$gene <- rownames(tib)
-  tib_neg <- dplyr::filter(tib, avg_log2FC < 0 & p_val_adj < 0.001)
-  genes_neg <- tib_neg$gene
-  return(genes_neg)
-})
-
-#### 2.2.1.2. Plot
-plotVenn(de_pos, 
-         showPlot = TRUE, 
-         systemShow = FALSE, 
-         outFile = paste0(wd, '332_leukemicOnly_venn_pos.svg'),
-         setColors = c(cbPalette[1], cbPalette[3], cbPalette[5]))
-
-plotVenn(de_neg, 
-         showPlot = TRUE, 
-         systemShow = FALSE, 
-         outFile = paste0(wd, '332_leukemicOnly_venn_neg.svg'),
-         setColors = c(cbPalette[1], cbPalette[3], cbPalette[5]))
-
 # 3. Compare the DE genes between scRNAseq and bulk RNAseq =====================
 
-## 3.2. Prepare the names of significantly and substantially expressed genes from the bulk RNAseq ----
+## 3.1. Prepare the names of significantly and substantially expressed genes from the bulk RNAseq ----
 
-### 3.2.1. Load in the DESeq2 output of the bulk RNAseq of the PDX
+### 3.1.1. Load in the DESeq2 output of the bulk RNAseq of the PDX
+##### Generated in this study in bulkRNA/bulkRNAseq.R
+
 res_bulk <- read_delim('repos/runx1eto-kd-aml/bulkRNA/out/020_deseq2_out.csv') %>%
   rename (gene = `...1`)
 
-### 3.2.2. Filter the bulk RNAseq results by significance and log2FC
+### 3.1.2. Filter the bulk RNAseq results by significance and log2FC
 res_bulk_filt <- res_bulk %>%
   dplyr::filter(padj < 0.05 & !is.na(padj) & abs(log2FoldChange) > 2)
 
@@ -249,7 +159,7 @@ gsea_in_geneset <- data.frame(
   'gene_symbol' = c(bulk_up$gene, bulk_dn$gene)
 )
 
-## 3.3. Prepare the ranks of DE genes from scRNAseq ----------------------------
+## 3.2. Prepare the ranks of DE genes from scRNAseq ----------------------------
 ranks <- lapply(markers, function(df){
   df_filt <- df %>% filter(pct.1 + pct.2 > 0.01) ##### filter out genes whose expression is low
   ranks <- df_filt$avg_log2FC
@@ -259,7 +169,7 @@ ranks <- lapply(markers, function(df){
   return(ranks)
 })
 
-## 3.4. Run GSEA ---------------------------------------------------------------
+## 3.3. Run GSEA ---------------------------------------------------------------
 gsea_res <- map(ranks, ~ GSEA(
   geneList = .x,
   maxGSSize = 2000,
@@ -276,7 +186,7 @@ map2(gsea_res, csv_names, ~ write.csv(.x, paste0(wd, .y)))
 saveRDS(gsea_res, paste0(wd, '343_gsea_res_againstBulk.rds'))
 gsea_res <- readRDS(paste0(wd, '343_gsea_res_againstBulk.rds'))
 
-## 3.5. Vizualize GSEA results (Suppl. Figure 4D) ------------------------------
+## 3.4. Vizualize GSEA results (Suppl. Figure 4F) ------------------------------
 pdf(paste0(wd, '344_gseaPlots_againstBulk.pdf'), width = 10, height = 10)
 plotlist <- lapply(names(gsea_res), function(sample_name){
   sublist <- lapply(paste0('bulkRNAseq patient C (PDX), ', c('upregulated', 'downregulated')), function(geneset_name){
@@ -321,27 +231,7 @@ seu_leukemic <- lapply(seu_leukemic, function(seuObj){
 
 ## 4.2. Plot pediatric LSC6 module score ---------------------------------------
 
-### 4.2.1. UMAP (Figure 5H)
-pdf(paste0(wd, '350_leukemicOnly_umap_pediatricLSC6.pdf'), width = 12, height = 3)
-p <- map2(seu_leukemic, names(seu_leukemic),
-          ~ FeaturePlot(.x,
-                        features = "LSC6",
-                        order = TRUE,
-                        split.by = 'condition',
-                        keep.scale = 'feature') &
-            theme(axis.line = element_blank(),
-                  axis.text.x = element_blank(),
-                  axis.text.y = element_blank(),
-                  axis.ticks = element_blank(),
-                  axis.title.x = element_blank(),
-                  axis.title.y = element_blank(),
-                  legend.position = 'bottom') &
-            labs(title = NULL) &
-            plot_annotation(title = .y))
-ggarrange(plotlist = p, ncol = 3)
-dev.off()
-
-### 4.2.2. Violin (Figure 5I)
+### 4.2.1. Violin (Figure 7F)
 
 ##### plots to just get the p-values from
 p1 <- map(seu_leukemic,
@@ -478,7 +368,7 @@ dev.off()
 ##### Reference paper: https://www.biorxiv.org/content/10.1101/2023.12.26.573390v1
 ##### Reference Seurat object provided by Andy Zeng
 
-## 6.1. Load in the reference and look at it -----------------------------------
+## 6.1. Load in the reference and look at it (plot not included in the paper) -----
 ref <- readRDS('references/Zeng_BoneMarrowMap_Annotated_Dataset.rds')
 
 Idents(ref) <- 'Tissue'
@@ -553,7 +443,7 @@ names(seu_leukemic) <- names(preds[[1]])
 
 ## 6.3. Visualize --------------------------------------------------------------
 
-### 6.3.1. UMAP by predictions 
+### 6.3.1. UMAP by predictions (Figure 6A left, middle left, middle right) 
 pdf(paste0(wd, '386_leukemicOnly_umap_predZeng.pdf'), height = 3.5, width = 7)
 p <- map2(seu_leukemic, names(seu_leukemic),
           ~ DimPlot(.x,
@@ -572,7 +462,7 @@ p <- map2(seu_leukemic, names(seu_leukemic),
 ggarrange(plotlist = p, ncol = 3, common.legend = TRUE, legend = 'bottom')
 dev.off()
 
-### 6.3.2. UMAP by prediction confidence 
+### 6.3.2. UMAP by prediction confidence (Figure 6B left, middle left, middle right)
 pdf(paste0(wd, '394_leukemicOnly_umap_predZeng_score.pdf'), height = 3.5, width = 7)
 p <- map2(seu_leukemic, names(seu_leukemic),
           ~ FeaturePlot(.x,
@@ -590,7 +480,7 @@ p <- map2(seu_leukemic, names(seu_leukemic),
 ggarrange(plotlist = p, ncol = 3, common.legend = TRUE, legend = 'bottom')
 dev.off()
 
-### 6.3.3. Box of prediction confidence by condition 
+### 6.3.3. Box of prediction confidence by condition (not included in the paper)
 pdf(paste0(wd, '402_leukemicOnly_box_byCond_ZengScore.pdf'), width = 5, height = 2.5)
 p <- map2(seu_leukemic, names(seu_leukemic),
           ~ ggplot(.x@meta.data, 
@@ -603,141 +493,6 @@ p <- map2(seu_leukemic, names(seu_leukemic),
             scale_fill_manual(values = kdmm_palette) +
             scale_color_manual(values = c('black', 'black')) +
             labs(y = 'Zeng score') +
-            theme(legend.position = 'none',
-                  panel.grid.major = element_blank(), 
-                  panel.grid.minor = element_blank(),
-                  axis.line = element_line(colour = "black"),
-                  axis.ticks = element_line(colour = "black"),
-                  axis.text.x = element_text(colour = "black"),
-                  axis.text.y = element_text(colour = "black")) +
-            stat_compare_means(comparisons = list(c('mismatch control', 'RUNX1::RUNX1T1 knockdown')), 
-                               method = 'wilcox.test',
-                               label = "p.format") +
-            plot_annotation(title = .y))
-ggarrange(plotlist = p, ncol = 3, common.legend = FALSE, legend = 'none')
-dev.off() 
-
-# 7. Cell type annotations according to van Galen & Hovestadt (2019) reference ====
-
-##### reference paper: https://doi.org/10.1016/j.cell.2019.01.031
-##### Reference Seurat object by Trincado et al, Biorxiv 2022, https://www.biorxiv.org/content/10.1101/2022.03.02.482638v1
-##### Reference Seurat object downloaded from https://figshare.com/ndownloader/files/33951884
-
-## 7.1. Load in the reference --------------------------------------------------
-load('references/reference_vanGalen_VelascoHernandez.Rdata')
-ref <- UpdateSeuratObject(merge.object)
-
-## 7.2. Re-integrate the reference using Harmony and look at it ----------------
-##### We do so to make it more similar to the Zeng et al. reference object.
-ref <- RunHarmony(ref, 
-                  group.by.vars = "orig.ident", 
-                  dims.use = 1:30, 
-                  max_iter = 50)
-ref <- RunUMAP(ref, 
-               reduction = "harmony", 
-               dims = 1:30)
-ref <- FindNeighbors(ref, reduction = "harmony", dims = 1:30)
-
-pdf(paste0(wd, '410_refVanGalen_harmony_umap_byCellType.pdf'), width = 3.5, height = 3.5)
-DimPlot(ref,
-        group.by = 'predictionRF',
-        cols = vanGalenPalette) +
-  theme_void() +
-  labs(title = '')
-dev.off()
-
-## 7.3. Project ----------------------------------------------------------------  
-seu_leukemic <- lapply(seu_leukemic, function(seuObj) {
-  seuObj <- NormalizeData(seuObj)
-  seuObj <- FindVariableFeatures(seuObj, selection.method = "vst", nfeatures = 2000)
-  DefaultAssay(seuObj) <- 'RNA'
-  return(seuObj)
-})
-
-anchors <- map(seu_leukemic, 
-               ~ FindTransferAnchors(reference = ref, query = .x, dims = 1:30))
-
-predictions <- map(anchors,
-                   ~ TransferData(anchorset = .x, refdata = ref$predictionRF, dims = 1:30))
-
-prediction.celltype <- lapply(names(predictions), function(name){
-  pred <- factor(predictions[[name]]$predicted.id, levels = levels(ref))
-  names(pred) <- rownames(predictions[[name]])
-  return(pred)
-})
-names(prediction.celltype) <- names(predictions)
-
-prediction.score <- lapply(names(predictions), function(name){
-  pred <- predictions[[name]]$prediction.score.max
-  names(pred) <- rownames(predictions[[name]])
-  return(pred)
-})
-names(prediction.score) <- names(predictions)
-
-preds <- list(prediction.celltype, prediction.score)
-##### Save predictions and prediction confidence scores because they will be needed later in the integrated object
-saveRDS(preds, paste0(wd, '418_vanGalenPreds_harmony.rds'))
-##### preds <- readRDS(paste0(wd, '418_vanGalenPreds_harmony.rds'))
-
-seu_leukemic <- lapply(names(seu_leukemic), function(name){
-  seuObj <- AddMetaData(seu_leukemic[[name]], metadata = preds[[1]][[name]], col.name = 'pred.vanGalen.celltype') %>%
-    AddMetaData(metadata = preds[[2]][[name]], col.name = 'pred.vanGalen.score')
-  return(seuObj)
-})
-names(seu_leukemic) <- names(preds[[1]])
-
-## 7.4. Visualize --------------------------------------------------------------
-
-### 7.4.1. UMAP by predictions 
-pdf(paste0(wd, '426_leukemicOnly_umap_predVanGalen.pdf'), height = 3.5, width = 8)
-p <- map2(seu_leukemic, names(seu_leukemic),
-          ~ DimPlot(.x,
-                    reduction = "umap",
-                    cols = vanGalenPalette,
-                    group.by = "pred.vanGalen.celltype") +
-            theme(axis.line = element_blank(),
-                  axis.text.x = element_blank(),
-                  axis.text.y = element_blank(),
-                  axis.ticks = element_blank(),
-                  axis.title.x = element_blank(),
-                  axis.title.y = element_blank(),
-                  legend.position = 'bottom') +
-            labs(title = NULL) +
-            plot_annotation(title = .y))
-ggarrange(plotlist = p, ncol = 3, common.legend = TRUE, legend = 'bottom')
-dev.off()
-
-### 7.3.2. UMAP by prediction confidence 
-pdf(paste0(wd, '434_leukemicOnly_umap_predVanGalen_score.pdf'), height = 3.5, width = 8)
-p <- map2(seu_leukemic, names(seu_leukemic),
-          ~ FeaturePlot(.x,
-                        features = 'pred.vanGalen.score') +
-            scale_color_viridis() +
-            theme(axis.line = element_blank(),
-                  axis.text.x = element_blank(),
-                  axis.text.y = element_blank(),
-                  axis.ticks = element_blank(),
-                  axis.title.x = element_blank(),
-                  axis.title.y = element_blank(),
-                  legend.position = 'bottom') +
-            labs(title = NULL) +
-            plot_annotation(title = .y))
-ggarrange(plotlist = p, ncol = 3, common.legend = TRUE, legend = 'bottom')
-dev.off()
-
-### 7.3.3. Box of prediction confidence by condition 
-pdf(paste0(wd, '442_leukemicOnly_box_byCond_vanGalen_score.pdf'), width = 5, height = 2.5)
-p <- map2(seu_leukemic, names(seu_leukemic),
-          ~ ggplot(.x@meta.data, 
-                   aes(x = condition, 
-                       y = pred.vanGalen.score, 
-                       fill = condition, 
-                       colour = condition)) +
-            geom_boxplot() +
-            theme_minimal() +
-            scale_fill_manual(values = kdmm_palette) +
-            scale_color_manual(values = c('black', 'black')) +
-            labs(y = 'van Galen score') +
             theme(legend.position = 'none',
                   panel.grid.major = element_blank(), 
                   panel.grid.minor = element_blank(),
@@ -767,6 +522,3 @@ saveRDS(seu_save, paste0(wd, 'seu_ptABCseparately_leukemicCells.rds'))
 sink(paste0(wd, '999_sessionInfo_3.txt'))
 sessionInfo()
 sink()
-
-# 99. Clear the environment =====================================================
-rm(list = ls())
