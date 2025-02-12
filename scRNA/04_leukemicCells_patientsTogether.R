@@ -686,7 +686,7 @@ gsea_res <- GSEA(
   TERM2GENE = goi
 )
 
-## 10.4. Vizualize GSEA results -------------------------------------------------
+## 10.4. Vizualize GSEA results (Supplementary Figure 6A) ----------------------
 pdf(paste0(wd, '640_integr_gseaPlots_OlafsRanks_Zheng_Hay_HSC.pdf'), width = 10, height = 10)
 plotlist <- lapply(paste0(unique(goi$gs_name)), function(geneset_name){
   p <- enrichplot::gseaplot(
