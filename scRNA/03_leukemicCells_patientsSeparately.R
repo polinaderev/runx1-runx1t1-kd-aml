@@ -522,6 +522,3 @@ saveRDS(seu_save, paste0(wd, 'seu_ptABCseparately_leukemicCells.rds'))
 sink(paste0(wd, '999_sessionInfo_3.txt'))
 sessionInfo()
 sink()
-
-# 99. Clear the environment =====================================================
-rm(list = ls())
