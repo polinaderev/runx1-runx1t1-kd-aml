@@ -113,66 +113,6 @@ pdf(paste0(wd, "340_leukemicOnly_vln_RUNX1-ETO_targetGenes.pdf"), height = 7, wi
 ggarrange(plotlist = patient_panels, ncol = 3, nrow = 1, common.legend = FALSE)
 dev.off()
 
-## 1.4. Violin plots of more genes ---------------------------------------------
-### 1.4.1. Preparations
-genes_of_interest <- c('HLA-DRA', 'HLA-DQA1', 'CIITA')
-
-##### find adjusted p-values for differential expression of genes of interest
-padj <- lapply(seu_leukemic, function(seuObj){
-  Idents(seuObj) <- 'condition'
-  de <- FindMarkers(seuObj,
-                    features = genes_of_interest,
-                    logfc.threshold = 0,
-                    min.pct = 0,
-                    ident.1 = 'RUNX1::RUNX1T1 knockdown',
-                    assay = 'RNA')
-  padj <- de$p_val_adj %>% signif(1)
-  names(padj) <- rownames(de)
-  padj <- c(padj[genes_of_interest[1]], padj[genes_of_interest[2]], padj[genes_of_interest[3]])
-  return(padj)
-})
-
-seu_leukemic <- lapply(seu_leukemic, function(seuObj){
-  Idents(seuObj) <- 'orig.ident'
-  return(seuObj)
-})
-
-### 1.4.2. Vector plot
-p <- map(seu_leukemic,
-         ~ VlnPlot(.x %>% subset(downsample = 2000), 
-                   features = genes_of_interest,
-                   split.by = 'condition',
-                   split.plot = TRUE,
-                   cols = c(kdmm_palette[2], kdmm_palette[1]),
-                   y.max = c(NA, NULL + 0.5),
-                   assay = 'RNA',
-                   combine = FALSE))
-
-p <- map2(p, padj, function(plots_sublist, padj_vector){
-  plots_sublist_new <- pmap(list(plots_sublist, padj_vector, names(padj_vector)), 
-                            function(plt, padj_value, gene_name){
-                              plt_new <- plt +
-                                ggtitle(NULL) +
-                                theme(legend.position = 'none',
-                                      axis.title.x = element_blank(),
-                                      axis.text.x = element_blank()) +
-                                labs(y = paste0('Expression level ', gene_name)) +
-                                geom_text(x = 1,
-                                          y = 1,
-                                          label = paste0('padj = ', as.character(padj_value)))
-                              return(plt_new)
-                            })
-  return(plots_sublist_new)  
-})
-
-patient_panels <- map(p, 
-                      ~ ggarrange(plotlist = .x, ncol = 1, nrow = 3, common.legend = TRUE, legend = 'bottom'))           
-
-
-pdf(paste0(wd, "341_leukemicOnly_vln_HLAgenes.pdf"), height = 7, width = 7)
-ggarrange(plotlist = patient_panels, ncol = 3, nrow = 1, common.legend = FALSE)
-dev.off()
-
 # 2. Differential expression analysis ==========================================
 
 ## 2.1. Find all DE genes between the 2 conditions -----------------------------
