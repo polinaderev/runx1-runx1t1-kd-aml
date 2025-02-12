@@ -350,7 +350,7 @@ root_pr_nodes <- igraph::V(principal_graph(cds)[["UMAP"]])$name[as.numeric(names
 ### 6.2.3. Root the graph
 cds <- order_cells(cds, root_pr_nodes = root_pr_nodes)
 
-## 6.3. Plot the pseudotime 
+## 6.3. Plot the pseudotime (Figure 4K) ----------------------------------------
 pdf(paste0(wd, '550_integr_umap_trajectory_byMonoclePseudotime.pdf'), 
     width = 3, height = 3.5)
 plot_cells(cds,
