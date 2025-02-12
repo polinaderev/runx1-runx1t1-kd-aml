@@ -659,27 +659,6 @@ DoHeatmap(seu_integr,
   scale_fill_viridis()
 dev.off()
 
-# 9. Plot some more marker genes ===============================================
-goi <- c('IL5RA', 'MET')
-
-DefaultAssay(seu_integr) <- 'RNA'
-
-pdf(paste0(wd, '630_integr_kd_umap_IL5RA_MET.pdf'), height = 3.5, width = length(goi)*2 + 2)
-FeaturePlot(seu_integr,
-            features = goi,
-            order = TRUE,
-            ncol = length(goi),
-            keep.scale = 'all') &
-  scale_colour_viridis() &
-  theme(axis.line = element_blank(),
-        axis.text.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks = element_blank(),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        legend.position = 'bottom')
-dev.off()
-
 # 10. GSEA for the Zheng cord blood HSC gene set ================================
 
 ## 10.1. Get the gene set -------------------------------------------------------
