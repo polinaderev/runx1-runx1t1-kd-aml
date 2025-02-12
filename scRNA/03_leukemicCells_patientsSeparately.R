@@ -368,7 +368,7 @@ dev.off()
 ##### Reference paper: https://www.biorxiv.org/content/10.1101/2023.12.26.573390v1
 ##### Reference Seurat object provided by Andy Zeng
 
-## 6.1. Load in the reference and look at it -----------------------------------
+## 6.1. Load in the reference and look at it (plot not included in the paper) -----
 ref <- readRDS('references/Zeng_BoneMarrowMap_Annotated_Dataset.rds')
 
 Idents(ref) <- 'Tissue'
@@ -443,7 +443,7 @@ names(seu_leukemic) <- names(preds[[1]])
 
 ## 6.3. Visualize --------------------------------------------------------------
 
-### 6.3.1. UMAP by predictions 
+### 6.3.1. UMAP by predictions (Figure 6A left, middle left, middle right) 
 pdf(paste0(wd, '386_leukemicOnly_umap_predZeng.pdf'), height = 3.5, width = 7)
 p <- map2(seu_leukemic, names(seu_leukemic),
           ~ DimPlot(.x,
@@ -462,7 +462,7 @@ p <- map2(seu_leukemic, names(seu_leukemic),
 ggarrange(plotlist = p, ncol = 3, common.legend = TRUE, legend = 'bottom')
 dev.off()
 
-### 6.3.2. UMAP by prediction confidence 
+### 6.3.2. UMAP by prediction confidence (Figure 6B left, middle left, middle right)
 pdf(paste0(wd, '394_leukemicOnly_umap_predZeng_score.pdf'), height = 3.5, width = 7)
 p <- map2(seu_leukemic, names(seu_leukemic),
           ~ FeaturePlot(.x,
@@ -480,7 +480,7 @@ p <- map2(seu_leukemic, names(seu_leukemic),
 ggarrange(plotlist = p, ncol = 3, common.legend = TRUE, legend = 'bottom')
 dev.off()
 
-### 6.3.3. Box of prediction confidence by condition 
+### 6.3.3. Box of prediction confidence by condition (not included in the paper)
 pdf(paste0(wd, '402_leukemicOnly_box_byCond_ZengScore.pdf'), width = 5, height = 2.5)
 p <- map2(seu_leukemic, names(seu_leukemic),
           ~ ggplot(.x@meta.data, 
