@@ -185,7 +185,7 @@ seu_integr <- AddMetaData(seu_integr, metadata = preds[[1]], col.name = 'pred.Ze
 
 ### 3.1.4. Visualize
 
-#### 3.1.4.1. UMAP by cell type prediction 
+#### 3.1.4.1. UMAP by cell type prediction (Figure 6A right)
 pdf(paste0(wd, '506_integr_umap_byZengPred.pdf'), height = 3.5, width = 2.75)
 DimPlot(seu_integr,
         reduction = 'umap',
@@ -197,7 +197,7 @@ DimPlot(seu_integr,
   theme(legend.position = 'bottom')
 dev.off()
 
-#### 3.1.4.2. UMAP by cell type prediction confidence 
+#### 3.1.4.2. UMAP by cell type prediction confidence (Figure 6B right)
 pdf(paste0(wd, '514_integr_umap_byZengPred_score.pdf'), height = 3.5, width = 2.75)
 FeaturePlot(seu_integr,
             features = 'pred.Zeng.score') +
@@ -212,7 +212,7 @@ FeaturePlot(seu_integr,
   labs(title = NULL) 
 dev.off()
 
-#### 3.1.4.3. Box of cell type prediction confidence, by condition
+#### 3.1.4.3. Box of cell type prediction confidence, by condition (Supplementary Figure 5A)
 pdf(paste0(wd, '524_integr_box_byCond_ZengScore.pdf'), height = 2.5, width = 2)
 ggplot(seu_integr@meta.data, 
        aes(x = condition, 
