@@ -237,9 +237,9 @@ ggplot(seu_integr@meta.data,
                      label = "p.format")
 dev.off()
 
-# 5. Find the bone marrow cell type module scores ==============================
+# 4. Find the bone marrow cell type module scores ==============================
 
-## 5.1 Find the necessary gene sets in MSigDB ----------------------------------
+## 4.1 Find the necessary gene sets in MSigDB ----------------------------------
 pathways <- msigdbr(species = 'Homo sapiens', category = 'C8')
 pathways <- filter(pathways, grepl('^HAY_BONE_MARROW', gs_name))
 
@@ -247,9 +247,9 @@ mygenesets <- split(pathways,
                     x = pathways$gene_symbol, 
                     f = pathways$gs_name)
 
-## 5.2. Determine and plot the scores ------------------------------------------
+## 4.2. Determine and plot the scores ------------------------------------------
 
-### 5.2.1. Determine
+### 4.2.1. Determine
 DefaultAssay(seu_integr) <- 'RNA'
 seu_integr <- AddModuleScore(seu_integr, features = mygenesets)
 colnames(seu_integr@meta.data)[
@@ -257,7 +257,7 @@ colnames(seu_integr@meta.data)[
   ] <- 
   names(mygenesets)
 
-### 5.2.2. Plot (Figure 7B)
+### 4.2.2. Plot (Figure 7B)
 pdf(paste0(wd, '542_integr_umap_byCond_celltypeScores_Hay_quantileColor.pdf'), height = 4, width = 6)
 map(names(mygenesets),
     ~ FeaturePlot(seu_integr,
@@ -278,9 +278,11 @@ map(names(mygenesets),
       plot_annotation(subtitle = .x))
 dev.off()
 
-# 6. Plot some marker genes ====================================================
+# 5. Plot some marker genes ====================================================
 DefaultAssay(seu_integr) <- 'RNA'
-goi <- c('CD24', 'IL5RA', 'RETN', 'LYST', 'SERPINA1', 'RNASE2', 'CD34', 'CEBPE', 'GATA2')
+
+## 5.1. UMAP not split (Figures 5C, S5E) ---------------------------------------
+goi <- c('CD24', 'IL5RA', 'RETN', 'SERPINA1', 'RNASE2', 'CEBPE', 'GATA2')
 
 pdf(paste0(wd, '545_integr_umap_genes_mono_granulo_eo_CD24_Cd125.pdf'), height = 3.5, width = length(goi)*2 + 2)
 FeaturePlot(seu_integr,
@@ -297,24 +299,7 @@ FeaturePlot(seu_integr,
         legend.position = 'bottom')
 dev.off()
 
-goi <- 'CD24'
-
-pdf(paste0(wd, '546_integr_umap_CD24.pdf'), height = 4, width = 3)
-FeaturePlot(seu_integr,
-            features = goi,
-            order = TRUE,
-            max.cutoff = 'q95',
-            min.cutoff = 'q5') +
-  scale_colour_viridis() +
-  theme(axis.line = element_blank(),
-        axis.text.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks = element_blank(),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        legend.position = 'bottom')
-dev.off()
-
+## 5.2. UMAP split by condition (Figure 7A) ------------------------------------
 goi <- 'CD34'
 cd34_max <- max(
   as.data.frame(t(seu_integr$RNA@data))$CD34
