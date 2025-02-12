@@ -659,9 +659,9 @@ DoHeatmap(seu_integr,
   scale_fill_viridis()
 dev.off()
 
-# 10. GSEA for the Zheng cord blood HSC gene set ================================
+# 10. GSEA =====================================================================
 
-## 10.1. Get the gene set -------------------------------------------------------
+## 10.1. Get the gene sets ------------------------------------------------------
 pathways <- msigdbr(species = 'Homo sapiens', category = 'C8')
 goi <- filter(pathways, 
               gs_name == 'ZHENG_CORD_BLOOD_C6_HSC_MULTIPOTENT_PROGENITOR'|gs_name == 'HAY_BONE_MARROW_CD34_POS_HSC') %>%
@@ -686,7 +686,7 @@ gsea_res <- GSEA(
   TERM2GENE = goi
 )
 
-## 10.4. Vizualize GSEA results (Supplementary Figure 6A) ----------------------
+## 10.4. Vizualize GSEA results (Figure 7C, Supplementary Figure 6A) -----------
 pdf(paste0(wd, '640_integr_gseaPlots_OlafsRanks_Zheng_Hay_HSC.pdf'), width = 10, height = 10)
 plotlist <- lapply(paste0(unique(goi$gs_name)), function(geneset_name){
   p <- enrichplot::gseaplot(
