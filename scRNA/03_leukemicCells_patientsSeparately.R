@@ -9,7 +9,6 @@ library(ggpubr)
 library(patchwork)
 library(viridis)
 library(aplot)
-library(nVennR)
 
 kdmm_palette <- c('RUNX1::RUNX1T1 knockdown' = '#f41626', 'mismatch control'= '#2538a5')
 
