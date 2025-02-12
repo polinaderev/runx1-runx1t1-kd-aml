@@ -371,7 +371,7 @@ plot_cells(cds,
         legend.position = 'bottom')
 dev.off()
 
-# 7. Low resolution clustering analysis ========================================
+# 7. Low resolution clustering analysis (superclusters) ========================
 
 ## 7.1. Cluster and split by condition -----------------------------------------
 DefaultAssay(seu_integr) <- 'integrated'
@@ -380,7 +380,7 @@ seu_integr <- FindClusters(seu_integr, resolution = 0.025)
 
 seu <- SplitObject(seu_integr, split.by = 'condition')
 
-## 7.2. Plot the clusters ------------------------------------------------------
+## 7.2. Plot the superclusters (Figure 6C) -------------------------------------
 pdf(paste0(wd, '560_integr_umap_2clust.pdf'), width = 3, height = 3.5)
 map2(seu, names(seu),
      ~ DimPlot(.x,
@@ -393,7 +393,7 @@ map2(seu, names(seu),
        theme(legend.position = 'none'))
 dev.off()
 
-## 7.3. Boxplot by cell type prediction confidence by cluster ------------------
+## 7.3. Boxplot by cell type prediction confidence by supercluster (Figure 6E) -----
 pdf(paste0(wd, '570_integr_box_by2Clust_ZengScore.pdf'), height = 2.5, width = 2.5)
 map2(seu, names(seu),
      ~ ggplot(.x@meta.data, 
@@ -421,7 +421,7 @@ map2(seu, names(seu),
                           label = "p.format"))
 dev.off()
 
-## 7.4. Proportions of phenotypes in cluster 0 ---------------------------------
+## 7.4. Proportions of phenotypes in supercluster I (Figure 6D left) ----------------
 seu_clust <- SplitObject(seu[['RUNX1::RUNX1T1 knockdown']], split.by = 'integrated_snn_res.0.025')
 
 celltype_counts <- dplyr::count(seu_clust[['0']]@meta.data, 
@@ -449,7 +449,7 @@ ggplot(celltype_counts,
         axis.text.y = element_text(colour = "black"))
 dev.off()
 
-## 7.5. Proportions of phenotypes in cluster 1 ---------------------------------
+## 7.5. Proportions of phenotypes in supercluster II (Figure 6D right) ---------
 celltype_counts <- dplyr::count(seu_clust[['1']]@meta.data, 
                                 pred.Zeng.celltype) %>%
   mutate(condition = 'knockdown')
@@ -475,24 +475,7 @@ ggplot(celltype_counts,
         axis.text.y = element_text(colour = "black"))
 dev.off()
 
-## 7.7. Cell type module scores (calculated earlier, now plotted for KD only) -----
-pdf(paste0(wd, '600_integr_kd_umap_HayModuleScores.pdf'), height = 4, width = 3)
-map(names(mygenesets),
-    ~ FeaturePlot(seu[['RUNX1::RUNX1T1 knockdown']],
-                  features = .x,
-                  order = FALSE) +
-      scale_colour_viridis() +
-      theme(axis.line = element_blank(),
-            axis.text.x = element_blank(),
-            axis.text.y = element_blank(),
-            axis.ticks = element_blank(),
-            axis.title.x = element_blank(),
-            axis.title.y = element_blank(),
-            legend.position = 'bottom') +
-      labs(title = NULL) +
-      plot_annotation(subtitle = .x))
-dev.off()
-
+## 7.7. Cell type module scores (calculated earlier, now plotted for KD only; Supplementary Figure 5B) -----
 pdf(paste0(wd, '600_integr_kd_umap_HayModuleScores_quantileColor.pdf'), height = 4, width = 3)
 map(names(mygenesets),
     ~ FeaturePlot(seu[['RUNX1::RUNX1T1 knockdown']],
@@ -514,7 +497,7 @@ dev.off()
 
 ## 7.8. Find markers of the clusters and compare them with markers of conditions ----
 
-### 7.8.1. Markers of the clusters
+### 7.8.1. Markers of the clusters (Supplementary Table 8)
 Idents(seu_integr) <- 'integrated_snn_res.0.025'
 
 markers_clust <- FindMarkers(seu_integr,
@@ -529,7 +512,7 @@ write.csv(markers_clust,
           paste0(wd, '601_integr_markers_clust0_vs_clust1.csv'),
           row.names = TRUE)
 
-### 7.8.2. Markers of the conditions
+### 7.8.2. Markers of the conditions (Supplementary Table 7)
 Idents(seu_integr) <- 'condition'
 
 markers_cond <- FindMarkers(seu_integr,
@@ -550,7 +533,7 @@ markers <- list(
   'cond' = markers_cond
 )
 
-### 7.8.4. nVenn diagram of markers of the clusters and conditions
+### 7.8.4. nVenn diagram of markers of the clusters and conditions (Figure 6F)
 de_pos <- lapply(markers, function(tib){
   tib$gene <- rownames(tib)
   tib_pos <- dplyr::filter(tib, avg_log2FC > 0 & p_val_adj < 0.001)
@@ -579,7 +562,7 @@ plotVenn(markers_venn,
          setColors = c(cbPalette[6], cbPalette[7], kdmm_palette[1], kdmm_palette[2])
          )
 
-### 7.8.5. Lists of genes in each area of the Nvenn diagram
+### 7.8.5. Lists of genes in each area of the Nvenn diagram (not included in the paper but you can re-make it by overlapping Suppl. Tables 7 and 8)
 result <- c()
 
 groups <- names(upregulated_genes)
