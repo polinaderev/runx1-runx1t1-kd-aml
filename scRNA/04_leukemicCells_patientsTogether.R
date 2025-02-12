@@ -257,43 +257,7 @@ colnames(seu_integr@meta.data)[
   ] <- 
   names(mygenesets)
 
-### 5.2.2. Plot
-pdf(paste0(wd, '540_integr_umap_celltypeScores_Hay.pdf'), height = 4, width = 3)
-map(names(mygenesets),
-         ~ FeaturePlot(seu_integr,
-                       features = .x,
-                       order = FALSE) +
-           scale_colour_viridis() +
-           theme(axis.line = element_blank(),
-                 axis.text.x = element_blank(),
-                 axis.text.y = element_blank(),
-                 axis.ticks = element_blank(),
-                 axis.title.x = element_blank(),
-                 axis.title.y = element_blank(),
-                 legend.position = 'bottom') +
-      labs(title = NULL) +
-      plot_annotation(subtitle = .x))
-dev.off()
-
-pdf(paste0(wd, '541_integr_umap_celltypeScores_Hay_quantileColor.pdf'), height = 4, width = 3)
-map(names(mygenesets),
-    ~ FeaturePlot(seu_integr,
-                  features = .x,
-                  order = FALSE,
-                  max.cutoff = 'q95',
-                  min.cutoff = 'q5') +
-      scale_colour_viridis() +
-      theme(axis.line = element_blank(),
-            axis.text.x = element_blank(),
-            axis.text.y = element_blank(),
-            axis.ticks = element_blank(),
-            axis.title.x = element_blank(),
-            axis.title.y = element_blank(),
-            legend.position = 'bottom') +
-      labs(title = NULL) +
-      plot_annotation(subtitle = .x))
-dev.off()
-
+### 5.2.2. Plot (Figure 7B)
 pdf(paste0(wd, '542_integr_umap_byCond_celltypeScores_Hay_quantileColor.pdf'), height = 4, width = 6)
 map(names(mygenesets),
     ~ FeaturePlot(seu_integr,
@@ -303,25 +267,6 @@ map(names(mygenesets),
       scale_colour_viridis(limits = c(quantile(seu_integr@meta.data[[.x]], probs = 0.05), 
                                       quantile(seu_integr@meta.data[[.x]], probs = 0.95)),
                            oob = scales::squish) &
-      theme(axis.line = element_blank(),
-            axis.text.x = element_blank(),
-            axis.text.y = element_blank(),
-            axis.ticks = element_blank(),
-            axis.title.x = element_blank(),
-            axis.title.y = element_blank(),
-            legend.position = 'bottom') &
-      labs(title = NULL) &
-      plot_annotation(subtitle = .x))
-dev.off()
-
-pdf(paste0(wd, '543_integr_umap_byCond_celltypeScores_Hay.pdf'), height = 4, width = 6)
-map(names(mygenesets),
-    ~ FeaturePlot(seu_integr,
-                  features = .x,
-                  order = FALSE,
-                  split.by = 'condition') &
-      scale_colour_viridis(limits = c(min(seu_integr@meta.data[[.x]]), 
-                                      max(seu_integr@meta.data[[.x]]))) &
       theme(axis.line = element_blank(),
             axis.text.x = element_blank(),
             axis.text.y = element_blank(),
