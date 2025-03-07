@@ -394,21 +394,6 @@ seu_leukemic <- lapply(seu_leukemic, function(seuObj) {
 anchors <- map(seu_leukemic, 
                ~ FindTransferAnchors(reference = ref, query = .x, dims = 1:30, npcs = 30))
 
-anc1 <- FindTransferAnchors(reference = ref, query = seu_leukemic[[1]], dims = 1:30, npcs = 30)
-saveRDS(anc1, paste0(wd, '376_anchrs_zeng_ptA.rds'))
-
-anc2 <- FindTransferAnchors(reference = ref, query = seu_leukemic[[2]], dims = 1:30, npcs = 30)
-saveRDS(anc2, paste0(wd, '376_anchrs_zeng_ptB.rds'))
-
-anc3 <- FindTransferAnchors(reference = ref, query = seu_leukemic[[3]], dims = 1:30, npcs = 30)
-saveRDS(anc3, paste0(wd, '376_anchrs_zeng_ptC.rds'))
-
-anc1 <- readRDS(paste0(wd, '376_anchrs_zeng_ptA.rds'))
-anc2 <- readRDS(paste0(wd, '376_anchrs_zeng_ptB.rds'))
-anc3 <- readRDS(paste0(wd, '376_anchrs_zeng_ptC.rds'))
-anchors <- list(anc1, anc2, anc3)
-names(anchors) <- names(seu_leukemic)
-
 predictions <- map(anchors,
                    ~ TransferData(anchorset = .x, refdata = ref$CellType_Broad, dims = 1:30))
 
