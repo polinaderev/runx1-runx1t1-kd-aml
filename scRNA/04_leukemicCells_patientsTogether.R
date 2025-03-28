@@ -648,15 +648,14 @@ markers <- dplyr::filter(markers, avg_log2FC > 0.1 & p_val_adj < 0.05) %>%
   arrange(desc(avg_log2FC)) %>%
   dplyr::slice_max(avg_log2FC, n = 10)
 
-pdf(paste0(wd, '620_integr_heatmap_hiResClust_markers.pdf'), height = 8, width = 5)
+pdf(paste0(wd, '621_integr_heatmap_hiResClust_markers.pdf'), height = 8, width = 5)
 DoHeatmap(seu_integr, 
           group.by = 'integrated_snn_res.0.57',
           features = markers$gene,
           assay = "integrated",
           slot = "scale.data",
           group.bar = TRUE,
-          group.colors = cbPalette2) + 
-  NoLegend() +
+          group.colors = cbPalette2) +
   scale_fill_viridis()
 dev.off()
 
