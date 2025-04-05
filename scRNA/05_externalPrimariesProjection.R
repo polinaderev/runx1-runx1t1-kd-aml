@@ -1,4 +1,5 @@
 library(Seurat)
+library(Matrix)
 library(tidyverse)
 
 library(patchwork)
@@ -20,6 +21,40 @@ wd <- 'repos/runx1-runx1t1-kd-aml/scRNA/out/'
 
 ##### reproducibility
 set.seed(42)
+
+# 1. RUNX1::RUNX1T1 AMLs from Lambo et al 2023 =================================
+
+## 1.1. Load in the data -------------------------------------------------------
+##### From https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE235063
+ref_path <- 'references/Lambo2023/'
+
+sample_names <- paste0(
+  c('GSM7494257_AML16_',
+    'GSM7494266_AML15_',
+    'GSM7494314_AML14_',
+    'GSM7494329_AML13_',
+    'GSM7494326_AML12_'),
+  'DX_processed_'
+)
+
+seu <- lapply(sample_names, function(sample_name){
+  mtx <- readMM(paste0(ref_path, sample_name, 'matrix.mtx'))
+  genes <- read.delim(paste0(ref_path, sample_name, "genes.tsv"),
+                      header = FALSE, 
+                      stringsAsFactors = FALSE)
+  barcodes <- read.delim(paste0(ref_path, sample_name, "barcodes.tsv"),
+                         header = FALSE, 
+                         stringsAsFactors = FALSE)
+  metadata <- read.delim(paste0(ref_path, sample_name, "metadata.tsv"), 
+                         header = TRUE, 
+                         row.names = 1)
+  rownames(mtx) <- genes$V1  
+  colnames(mtx) <- barcodes$V1
+  seuObj <- CreateSeuratObject(counts = mtx, meta.data = metadata)
+  return(seuObj)
+})
+
+names(seu) <- c('AML16', 'AML15', 'AML14', 'AML13', 'AML12')
 
 
 
