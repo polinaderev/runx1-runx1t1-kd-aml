@@ -22,9 +22,15 @@ wd <- 'repos/runx1-runx1t1-kd-aml/scRNA/out/'
 ##### reproducibility
 set.seed(42)
 
-# 1. RUNX1::RUNX1T1 AMLs from Lambo et al 2023 =================================
+# 1. Load in the Zeng et al reference ==========================================
+##### Reference paper: https://www.biorxiv.org/content/10.1101/2023.12.26.573390v1
+##### Reference Seurat object provided by Andy Zeng
+ref <- readRDS('references/Zeng_BoneMarrowMap_Annotated_Dataset.rds')
+Idents(ref) <- 'Tissue'
 
-## 1.1. Load in the data -------------------------------------------------------
+# 2. RUNX1::RUNX1T1 AMLs from Lambo et al 2023 =================================
+
+## 2.1. Load in the data -------------------------------------------------------
 ##### From https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE235063
 ref_path <- 'references/Lambo2023/'
 
@@ -56,7 +62,7 @@ seu <- lapply(sample_names, function(sample_name){
 
 names(seu) <- c('AML16', 'AML15', 'AML14', 'AML13', 'AML12')
 
-
+## 2.2. 
 
 # 98. Session info ==============================================================
 sink(paste0(wd, '999_sessionInfo_3.txt'))
