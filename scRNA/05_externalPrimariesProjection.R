@@ -17,7 +17,7 @@ zengPalette <- c('B' = "#FFA500", 'Plasma Cell' = "#C1BC00", 'Plasma_Cell' = "#C
                  'Pro-Monocyte' = "#FF4856")
 
 ##### Directory for outputs (replace with your directory):
-wd <- 'repos/runx1-runx1t1-kd-aml/scRNA/out/'
+wd <- 'repos/runx1eto-kd-aml/scRNA/out/'
 
 ##### reproducibility
 set.seed(42)
@@ -182,6 +182,8 @@ query_data <- lapply(names(seu), function(sample_name){
 })
 names(query_data) <- names(seu)
 
+
+### 2.3.1. UMAP colored by cell density
 plotlist <- lapply(names(seu), function(sample_name){
   plts <- query_data[[sample_name]] %>%
       ggplot(aes(x = UMAP_1, y = UMAP_2)) +
@@ -197,7 +199,32 @@ plotlist <- lapply(names(seu), function(sample_name){
     return(plts)
   })
 
-pdf(paste0(wd, '705_lambo_umapAndy_density.pdf'), height = 4.5, width = 5)
+pdf(paste0(wd, '705_lambo_umapAndy_density.pdf'), height = 5.5, width = 7)
+plotlist
+dev.off()
+
+### 2.3.3. UMAP colored by cell type prediction confidence
+
+plotlist <- lapply(names(seu), function(sample_name){
+  plts <- query_data[[sample_name]] %>%
+      ggplot(aes(x = UMAP_1, y = UMAP_2)) +
+      geom_point(data = ref_data, color = '#E3E3E3', size = 0.05, alpha = 0.5) +
+      geom_point(aes(colour = predicted.Zeng_celltype.score),
+                 data = query_data[[sample_name]],
+                 size = 0.05) +
+      scale_color_viridis_c(begin = 0,
+                            end = 1,
+                            direction = 1,
+                            na.value = 'grey',
+                            name = 'Prediction confidence') + 
+      theme_void() + 
+      labs(title = 'Sample from Lambo et al 2023 projected onto reference from Zeng et al 2023',
+           subtitle = sample_name) +
+      ggplot2::theme(strip.text.x = ggplot2::element_text(size = 18), legend.position = 'bottom')
+    return(plts)
+  })
+
+pdf(paste0(wd, '710_lambo_umapAndy_predConfidence.pdf'), height = 5.5, width = 7)
 plotlist
 dev.off()
 
