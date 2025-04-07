@@ -503,7 +503,7 @@ plotlist <- lapply(names(seu), function(sample_name){
   })
 names(plotlist) <- names(seu)
 
-pdf(paste0(wd, '735_kellaway_umapAndy_density.pdf'), height = 6, width = 14)
+pdf(paste0(wd, '735_kellaway_umapAndy_predConfidence.pdf'), height = 6, width = 14)
 
 ggarrange(plotlist[['R183.LSC']], plotlist[['R183.Blast']], nrow = 1, ncol = 2, common.legend = FALSE) +
   plot_annotation(title = 'Kellaway et al 2024, projected onto Zeng et al 2023')
