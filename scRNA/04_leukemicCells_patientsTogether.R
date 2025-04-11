@@ -607,6 +607,36 @@ for (condition in names(exclusive_conditions)) {
 
 writeLines(result, paste0(wd, "604_geneListsFor_nVenn.txt"))
 
+## 7.9. UMAP split by condition, colored by patient and with nr of cells per patient in each supercluster (Suppl. Fig. 5) ------------
+seu_cond <- SplitObject(seu_integr, split.by = 'condition')
+
+pdf(paste0(wd, '604_integr_umap_2clust_byCond_byPt.pdf'), width = 3, height = 3.5)
+map2(seu_cond, names(seu_cond),
+     ~ DimPlot(.x,
+               reduction = 'umap',
+               group.by = 'orig.ident',
+               cols = c(cbPalette[1], cbPalette[3], cbPalette[5]),
+               shuffle = TRUE) +
+       theme_void() +
+       labs(title = NULL, subtitle = .y) +
+       theme(legend.position = 'bottom'))
+dev.off()
+
+map(seu_cond, ~ table(.x@meta.data$integrated_snn_res.0.025, .x@meta.data$orig.ident))
+
+# $`RUNX1::RUNX1T1 knockdown`
+# 
+# patientA patientB patientC
+# 0      997      745     1341
+# 1      552      804      208
+# 
+# $`mismatch control`
+# 
+# patientA patientB patientC
+# 0      839      941     1362
+# 1      710      608      187
+
+
 # 8. High resolution clustering analysis =======================================
 
 ## 8.1. Cluster ----------------------------------------------------------------
