@@ -237,6 +237,19 @@ ggplot(seu_integr@meta.data,
                      label = "p.format")
 dev.off()
 
+## 3.2. Find markers for cell types and visualize ------------------------------
+
+### 3.2.1. Find the markers
+Idents(seu_integr) <- 'pred.Zeng.celltype'
+DefaultAssay(seu_integr) <- 'RNA'
+
+markers <- FindAllMarkers(seu_integr,
+                          assay = 'RNA',
+                          logfc.threshold = 0.1,
+                          min.pct = 0.01,
+                          only.pos = TRUE)
+saveRDS(markers, paste0(wd, '530_zengCelltypes_markers.rds'))
+
 # 4. Find the bone marrow cell type module scores ==============================
 
 ## 4.1 Find the necessary gene sets in MSigDB ----------------------------------
