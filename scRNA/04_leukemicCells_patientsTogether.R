@@ -268,7 +268,7 @@ DoHeatmap(seu_integr %>% subset(subset = pred.Zeng.celltype %in% unique(markers$
           assay = "integrated",
           slot = "scale.data",
           group.bar = TRUE,
-          group.colors = cbPalette2) +
+          group.colors = zengPalette) +
   scale_fill_viridis() +
   theme(legend.position = 'none')
 dev.off()
