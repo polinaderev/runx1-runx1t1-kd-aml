@@ -250,6 +250,29 @@ markers <- FindAllMarkers(seu_integr,
                           only.pos = TRUE)
 saveRDS(markers, paste0(wd, '530_zengCelltypes_markers.rds'))
 
+### 3.2.2. Plot a heatmap with top markers -------------------------------------
+markers <- markers %>%
+  group_by(cluster) %>%
+  dplyr::filter(avg_log2FC > 0.1 & p_val_adj < 0.05) %>%
+  dplyr::filter(pct.1 > 0.1 | pct.2 > 0.1) %>%
+  arrange(desc(avg_log2FC)) %>%
+  dplyr::slice_max(avg_log2FC, n = 10)
+
+markers$cluster <- as.character(markers$cluster)
+seu_integr@meta.data$pred.Zeng.celltype <- as.character(seu_integr@meta.data$pred.Zeng.celltype)
+
+pdf(paste0(wd, '531_integr_heatmap_ZengCelltypes_markers.pdf'), height = 11, width = 15)
+DoHeatmap(seu_integr %>% subset(subset = pred.Zeng.celltype %in% unique(markers$cluster)), 
+          group.by = 'pred.Zeng.celltype',
+          features = markers$gene,
+          assay = "integrated",
+          slot = "scale.data",
+          group.bar = TRUE,
+          group.colors = cbPalette2) +
+  scale_fill_viridis() +
+  theme(legend.position = 'none')
+dev.off()
+
 # 4. Find the bone marrow cell type module scores ==============================
 
 ## 4.1 Find the necessary gene sets in MSigDB ----------------------------------
