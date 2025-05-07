@@ -443,6 +443,15 @@ seu_leukemic_umapAndy <- map2(anchors, seu_leukemic, ~ MapQuery(anchorset = .x,
                          reference.reduction = "pca", 
                          reduction.model = "umap"))
 
+pred_embeddings <- lapply(seu_leukemic_umapAndy, function(seuObj){
+    pca <- Embeddings(seuObj[["ref.pca"]])
+    umap <- Embeddings(seuObj[["ref.umap"]])
+    out <- list('pca' = pca, 'umap' = umap)
+    return(out)
+  })
+
+saveRDS(pred_embeddings, paste0(wd, '379_zengEmbeddings.rds'))
+
 ## 6.3. Visualize --------------------------------------------------------------
 
 ### 6.3.1. UMAP by predictions (Figure 6A left, middle left, middle right) 
@@ -510,7 +519,39 @@ ggarrange(plotlist = p, ncol = 3, common.legend = FALSE, legend = 'none')
 dev.off() 
 
 ### 6.3.4. UMAP in Andy's coordinates, colored by cell density
+ref_data <- Embeddings(subset(ref, downsample = 50000)[["umap"]]) %>%
+  as.data.frame() 
 
+query_data <- lapply(names(seu_leukemic_umapAndy), function(sample_name){
+  seu_leukemic_umapAndy[[sample_name]]@meta.data$cell_label <- rownames(seu_leukemic_umapAndy[[sample_name]]@meta.data)
+  df <- Embeddings(seu_leukemic_umapAndy[[sample_name]][['ref.umap']]) %>%
+    as.data.frame() %>%
+    mutate(patient = sample_name) %>%
+    rename(UMAP_1 = refUMAP_1,
+           UMAP_2 = refUMAP_2) %>%
+    tibble::rownames_to_column(var = 'cell_label') %>%
+    left_join(seu_leukemic_umapAndy[[sample_name]]@meta.data %>% 
+                select(cell_label, predicted.Zeng_celltype.score),
+              by = 'cell_label')
+  return(df)
+})
+names(query_data) <- names(seu_leukemic_umapAndy)
+
+plotlist <- map2(query_data, names(query_data),
+     ~ .x %>%
+       ggplot(aes(x = UMAP_1, y = UMAP_2)) +
+       geom_point(data = ref_data, color = '#E3E3E3', size = 0.05, alpha = 0.5) +
+       ggpointdensity::geom_pointdensity(size = 0.2) +
+       jcolors::scale_color_jcolors_contin("pal3", reverse = TRUE, bias = 1.75) +
+       geom_density_2d(alpha = 0.4, color = 'black', h = 1.5, linewidth = 0.3) +
+       theme_void() + 
+       labs(subtitle = .y) +
+       ggplot2::theme(strip.text.x = ggplot2::element_text(size = 18), 
+                      legend.position = 'none'))
+
+pdf(paste0(wd, '397_leukemicOnly_umapZeng_density.pdf'), height = 3.5, width = 10)
+ggarrange(plotlist = plotlist, nrow = 1, ncol = 3)
+dev.off()
 
 # 8. Make a list of Seurat objects for uploading to Zenodo =====================
 seu_save <- lapply(seu_leukemic, function(obj){
