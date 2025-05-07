@@ -532,7 +532,8 @@ query_data <- lapply(names(seu_leukemic_umapAndy), function(sample_name){
     tibble::rownames_to_column(var = 'cell_label') %>%
     left_join(seu_leukemic_umapAndy[[sample_name]]@meta.data %>% 
                 select(cell_label, predicted.Zeng_celltype.score),
-              by = 'cell_label')
+              by = 'cell_label') %>%
+    sample_n(3000)
   return(df)
 })
 names(query_data) <- names(seu_leukemic_umapAndy)
@@ -551,6 +552,67 @@ plotlist <- map2(query_data, names(query_data),
 
 pdf(paste0(wd, '397_leukemicOnly_umapZeng_density.pdf'), height = 3.5, width = 10)
 ggarrange(plotlist = plotlist, nrow = 1, ncol = 3)
+dev.off()
+
+### 6.3.5. UMAP in Andy's coordinates, colored by cell density, split by condition
+seu <- map(seu_leukemic_umapAndy, ~ SplitObject(.x, split.by = 'condition'))
+
+query_data <- lapply(names(seu), function(MM_or_KD){
+  sublist_new <- lapply(names(seu[[MM_or_KD]]), function(sample_name){
+    seu[[MM_or_KD]][[sample_name]]@meta.data$cell_label <- rownames(seu[[MM_or_KD]][[sample_name]]@meta.data)
+    df <- Embeddings(seu[[MM_or_KD]][[sample_name]][['ref.umap']]) %>%
+      as.data.frame() %>%
+      mutate(patient = sample_name) %>%
+      rename(UMAP_1 = refUMAP_1,
+             UMAP_2 = refUMAP_2) %>%
+      tibble::rownames_to_column(var = 'cell_label') %>%
+      left_join(seu[[MM_or_KD]][[sample_name]]@meta.data %>% 
+                  select(cell_label, predicted.Zeng_celltype.score),
+                by = 'cell_label') %>%
+      sample_n(1500)
+    return(df)
+  })
+  names(sublist_new) <- names(seu[[MM_or_KD]])
+  return(sublist_new)
+})
+names(query_data) <- names(seu)
+
+plotlist <- lapply(names(seu), function(patient_name){
+  plts <- lapply(names(seu[[patient_name]]), function(MM_or_KD){
+    plt <- query_data[[patient_name]][[MM_or_KD]] %>%
+      ggplot(aes(x = UMAP_1, y = UMAP_2)) +
+      geom_point(data = ref_data, color = '#E3E3E3', size = 0.05, alpha = 0.5) +
+      ggpointdensity::geom_pointdensity(size = 0.2) +
+      jcolors::scale_color_jcolors_contin("pal3", reverse = TRUE, bias = 1.75) +
+      geom_density_2d(alpha = 0.4, color = 'black', h = 1.5, linewidth = 0.3) +
+      theme_void() + 
+      labs(subtitle = MM_or_KD) +
+      ggplot2::theme(strip.text.x = ggplot2::element_text(size = 18), 
+                     legend.position = 'none')
+    return(plt)
+  })
+  names(plts) <- names(seu[[patient_name]])
+  return(plts)
+})
+names(plotlist) <- names(seu)
+
+pdf(paste0(wd, '398_leukemicOnly_byCond_umapZeng_density.pdf'), height = 3.5, width = 6.5)
+
+ggarrange(plotlist[['patientA']][['mismatch control']], 
+          plotlist[['patientA']][['RUNX1::RUNX1T1 knockdown']], 
+          nrow = 1, ncol = 2) +
+  plot_annotation(title = 'Patient A')
+
+ggarrange(plotlist[['patientB']][['mismatch control']], 
+          plotlist[['patientB']][['RUNX1::RUNX1T1 knockdown']], 
+          nrow = 1, ncol = 2) +
+  plot_annotation(title = 'Patient B')
+
+ggarrange(plotlist[['patientC']][['mismatch control']], 
+          plotlist[['patientC']][['RUNX1::RUNX1T1 knockdown']], 
+          nrow = 1, ncol = 2) +
+  plot_annotation(title = 'Patient C (PDX)')
+
 dev.off()
 
 # 8. Make a list of Seurat objects for uploading to Zenodo =====================
