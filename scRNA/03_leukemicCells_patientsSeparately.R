@@ -392,7 +392,16 @@ seu_leukemic <- lapply(seu_leukemic, function(seuObj) {
 })
 
 anchors <- map(seu_leukemic, 
-               ~ FindTransferAnchors(reference = ref, query = .x, dims = 1:30, npcs = 30))
+               ~ FindTransferAnchors(reference = ref, query = .x, dims = 1:30, npcs = 30, reference.reduction = "pca"))
+
+a1 <- FindTransferAnchors(reference = ref, query = seu_leukemic[[1]], dims = 1:30, npcs = 30, reference.reduction = "pca")
+saveRDS(a1, paste0(wd, '377_anchrs_zeng_withRefRed_ptA.rds'))
+
+a2 <- FindTransferAnchors(reference = ref, query = seu_leukemic[[2]], dims = 1:30, npcs = 30, reference.reduction = "pca")
+saveRDS(a2, paste0(wd, '377_anchrs_zeng_withRefRed_ptB.rds'))
+
+a3 <- FindTransferAnchors(reference = ref, query = seu_leukemic[[3]], dims = 1:30, npcs = 30, reference.reduction = "pca")
+saveRDS(a3, paste0(wd, '377_anchrs_zeng_withRefRed_ptC.rds'))
 
 predictions <- map(anchors,
                    ~ TransferData(anchorset = .x, refdata = ref$CellType_Broad, dims = 1:30))
@@ -425,6 +434,14 @@ seu_leukemic <- lapply(names(seu_leukemic), function(name){
   return(seuObj)
 })
 names(seu_leukemic) <- names(preds[[1]])
+
+##### also make Seurat objects in Andy's UMAP coordinates
+seu_leukemic_umapAndy <- map2(anchors, seu_leukemic, ~ MapQuery(anchorset = .x, 
+                         reference = ref, 
+                         query = .y, 
+                         refdata = list(Zeng_celltype = 'CellType_Broad'),
+                         reference.reduction = "pca", 
+                         reduction.model = "umap"))
 
 ## 6.3. Visualize --------------------------------------------------------------
 
@@ -491,6 +508,9 @@ p <- map2(seu_leukemic, names(seu_leukemic),
             plot_annotation(title = .y))
 ggarrange(plotlist = p, ncol = 3, common.legend = FALSE, legend = 'none')
 dev.off() 
+
+### 6.3.4. UMAP in Andy's coordinates, colored by cell density
+
 
 # 8. Make a list of Seurat objects for uploading to Zenodo =====================
 seu_save <- lapply(seu_leukemic, function(obj){
