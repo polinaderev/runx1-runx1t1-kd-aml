@@ -305,6 +305,56 @@ names(emb) <- names(pred_embeddings[[1]])
 seu_integr[['ref.pca']] <- CreateDimReducObject(as.matrix(emb[['pca']]))
 seu_integr[['ref.umap']] <- CreateDimReducObject(as.matrix(emb[['umap']]))
 
+### 3.3.3. Vizualise
+
+#### 3.3.3.1. Integrated object in Andy's UMAP coordinates, colored by cell density
+ref_data <- Embeddings(subset(ref, downsample = 50000)[["umap"]]) %>%
+  as.data.frame() 
+
+query_data <- Embeddings(seu_integr[['ref.umap']]) %>%
+  as.data.frame() %>%
+  rename(UMAP_1 = refUMAP_1,
+         UMAP_2 = refUMAP_2) %>%
+  rownames_to_column(var = 'cell_label') %>%
+  left_join(seu_integr@meta.data %>% rownames_to_column('cell_label') %>% select(cell_label, condition),
+            by = 'cell_label')
+
+pdf(paste0(wd, '533_integr_umapZeng.pdf'), height = 3.5, width = 3.5)
+ggplot(query_data,
+       aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(data = ref_data, color = '#E3E3E3', size = 0.05, alpha = 0.5) +
+  ggpointdensity::geom_pointdensity(size = 0.2) +
+  jcolors::scale_color_jcolors_contin("pal3", reverse = TRUE, bias = 1.75) +
+  geom_density_2d(alpha = 0.4, color = 'black', h = 1.5, linewidth = 0.3) +
+  theme_void() +
+  ggplot2::theme(strip.text.x = ggplot2::element_text(size = 18), 
+                 legend.position = 'none')
+dev.off()
+
+#### 3.3.3.1. Integrated object in Andy's UMAP coordinates, colored by cell density, split by condition
+query_data <- lapply(unique(seu_integr@meta.data$condition),
+                     function(MM_or_KD){
+                       df <- query_data %>%
+                         filter(condition == MM_or_KD)
+                       return(df)
+                     })
+names(query_data) <- unique(seu_integr@meta.data$condition)
+
+plotlist <- map2(query_data, names(query_data),
+                 ~ .x %>%
+                   ggplot(aes(x = UMAP_1, y = UMAP_2)) +
+                   geom_point(data = ref_data, color = '#E3E3E3', size = 0.05, alpha = 0.5) +
+                   ggpointdensity::geom_pointdensity(size = 0.2) +
+                   jcolors::scale_color_jcolors_contin("pal3", reverse = TRUE, bias = 1.75) +
+                   geom_density_2d(alpha = 0.4, color = 'black', h = 1.5, linewidth = 0.3) +
+                   theme_void() + 
+                   labs(subtitle = .y) +
+                   ggplot2::theme(strip.text.x = ggplot2::element_text(size = 18), 
+                                  legend.position = 'bottom'))
+
+pdf(paste0(wd, '534_integr_byCond_umapZeng.pdf'), height = 4, width = 6.5)
+ggarrange(plotlist = plotlist, nrow = 1, ncol = 2)
+dev.off()
 
 # 4. Find the bone marrow cell type module scores ==============================
 
