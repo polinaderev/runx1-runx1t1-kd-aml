@@ -160,7 +160,8 @@ DimPlot(seu_integr,
   theme(legend.position = 'bottom')
 dev.off()
 
-# 3. Add the cell type predictions (Zeng et al reference) and visualize ========
+# 3. Add the cell type predictions and embeddings (Zeng et al reference) and visualize ====
+
 ## 3.1. Add predictions and their scores ---------------------------------------
 
 ### 3.1.1. Load the cell type predictions
@@ -272,6 +273,38 @@ DoHeatmap(seu_integr %>% subset(subset = pred.Zeng.celltype %in% unique(markers$
   scale_fill_viridis() +
   theme(legend.position = 'none')
 dev.off()
+
+## 3.3. Add the UMAP coordinates of my cells in Andy's UMAP coordinates and visualize ----
+
+### 3.3.1. Load the embeddings (produced in scRNA/03_leukemicCells_patientsSeparately.R)
+pred_embeddings <- readRDS(paste0(wd, '379_zengEmbeddings.rds'))
+
+### 3.3.2. Fix the cell names
+add <- c('1', '2', '3')
+
+pred_embeddings <- map2(pred_embeddings, add, function(embedding_sublist, suffix){
+  embedding_sublist_new <- lapply(embedding_sublist, function(embedding_df){
+    rownames(embedding_df) <- paste0(rownames(embedding_df), '_', suffix)
+    embedding_df <- embedding_df %>% as.data.frame() %>% rownames_to_column('cell_label')
+    return(embedding_df)
+  })
+  return(embedding_sublist_new)
+})
+
+emb <- lapply(names(pred_embeddings[[1]]), function(pca_or_umap){
+  df <- rbind(pred_embeddings[[1]][[pca_or_umap]],
+              pred_embeddings[[2]][[pca_or_umap]],
+              pred_embeddings[[3]][[pca_or_umap]])
+  df <- df %>%
+    filter(cell_label %in% colnames(seu_integr)) %>%
+    column_to_rownames('cell_label')
+  return(df)
+})
+names(emb) <- names(pred_embeddings[[1]])
+
+seu_integr[['ref.pca']] <- CreateDimReducObject(as.matrix(emb[['pca']]))
+seu_integr[['ref.umap']] <- CreateDimReducObject(as.matrix(emb[['umap']]))
+
 
 # 4. Find the bone marrow cell type module scores ==============================
 
