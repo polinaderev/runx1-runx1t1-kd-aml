@@ -352,7 +352,7 @@ plotlist <- map2(query_data, names(query_data),
                    ggplot2::theme(strip.text.x = ggplot2::element_text(size = 18), 
                                   legend.position = 'bottom'))
 
-pdf(paste0(wd, '534_integr_byCond_umapZeng.pdf'), height = 4, width = 6.5)
+pdf(paste0(wd, '534_integr_byCond_umapZeng.pdf'), height = 4, width = 7)
 ggarrange(plotlist = plotlist, nrow = 1, ncol = 2)
 dev.off()
 
