@@ -37,7 +37,7 @@ ref_data <- Embeddings(subset(ref, downsample = 50000)[["umap"]]) %>%
 ##### From https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE235063
 ref_path <- 'references/Lambo2023/'
 
-sample_names_dx <- paste0(
+sample_names <- paste0(
   c('GSM7494257_AML16_',
     'GSM7494266_AML15_',
     'GSM7494314_AML14_',
@@ -46,63 +46,39 @@ sample_names_dx <- paste0(
   'DX_processed_'
 )
 
-sample_names_rel <- paste0(
-  c('GSM7494258_AML16_',
-    'GSM7494267_AML15_',
-    ##### patient 14 was censored so we don't have their relapse dataset
-    'GSM7494330_AML13_',
-    'GSM7494327_AML12_'),
-  'REL_processed_'
-)
-
-sample_names <- list(
-  'dx' = sample_names_dx,
-  'rel' = sample_names_rel
-)
-
-seu <- lapply(sample_names, function(sublist){
-  sublist_new <- lapply(sublist, function(sample_name){
-    mtx <- readMM(paste0(ref_path, sample_name, 'matrix.mtx'))
-    genes <- read.delim(paste0(ref_path, sample_name, "genes.tsv"),
-                        header = FALSE, 
-                        stringsAsFactors = FALSE)
-    barcodes <- read.delim(paste0(ref_path, sample_name, "barcodes.tsv"),
-                           header = FALSE, 
-                           stringsAsFactors = FALSE)
-    metadata <- read.delim(paste0(ref_path, sample_name, "metadata.tsv"), 
-                           header = TRUE, 
-                           row.names = 1)
-    rownames(mtx) <- genes$V1  
-    colnames(mtx) <- barcodes$V1
-    seuObj <- CreateSeuratObject(counts = mtx, meta.data = metadata)
-    return(seuObj)
-  })
-  return(sublist_new)
+seu <- lapply(sample_names, function(sample_name){
+  mtx <- readMM(paste0(ref_path, sample_name, 'matrix.mtx'))
+  genes <- read.delim(paste0(ref_path, sample_name, "genes.tsv"),
+                      header = FALSE, 
+                      stringsAsFactors = FALSE)
+  barcodes <- read.delim(paste0(ref_path, sample_name, "barcodes.tsv"),
+                         header = FALSE, 
+                         stringsAsFactors = FALSE)
+  metadata <- read.delim(paste0(ref_path, sample_name, "metadata.tsv"), 
+                         header = TRUE, 
+                         row.names = 1)
+  rownames(mtx) <- genes$V1  
+  colnames(mtx) <- barcodes$V1
+  seuObj <- CreateSeuratObject(counts = mtx, meta.data = metadata)
+  return(seuObj)
 })
 
-names(seu[['dx']]) <- c('AML16_DX', 'AML15_DX', 'AML14_DX', 'AML13_DX', 'AML12_DX')
-names(seu[['rel']]) <- c('AML16_DX', 'AML15_DX', 'AML13_DX', 'AML12_DX')
+names(seu) <- c('AML16_DX', 'AML15_DX', 'AML14_DX', 'AML13_DX', 'AML12_DX')
 
 ## 2.2. Subset to malignant cells only -----------------------------------------
-seu <- lapply(seu, function(sublist){
-  sublist_new <- lapply(sublist, function(seuObj){
-    seuObj_subset <- subset(seuObj, Malignant == 'Malignant')
-    return(seuObj_subset)
-  })
-  return(sublist_new)
+seu <- lapply(seu, function(seuObj){
+  seuObj_subset <- subset(seuObj, Malignant == 'Malignant')
+  return(seuObj_subset)
 })
 
 ## 2.3. Project onto Andy Zeng's reference -------------------------------------
-seu <- lapply(seu, function(sublist) {
-  sublist_new <- lapply(sublist, function(seuObj){
+seu <- lapply(seu, function(seuObj) {
   seuObj <- NormalizeData(seuObj)
   seuObj <- FindVariableFeatures(seuObj, selection.method = "vst", nfeatures = 2000)
   DefaultAssay(seuObj) <- 'RNA'
   return(seuObj)
-  })
-  return(sublist_new)
 })
-
+  
 anchors <- lapply(seu, function(sublist){
   map(sublist, ~ FindTransferAnchors(reference = ref, 
                                      query = .x, 
@@ -110,53 +86,29 @@ anchors <- lapply(seu, function(sublist){
                                      npcs = 30))
   })
 
-seu <- map2(anchors, seu, function(anchor_sublist, seu_sublist){
-  res <- map2(anchor_sublist, seu_sublist,
-       ~ MapQuery(anchorset = .x, 
-                  reference = ref, 
-                  query = .y, 
-                  refdata = list(Zeng_celltype = 'CellType_Broad'),
-                  reference.reduction = "pca", 
-                  reduction.model = "umap"))
-  return(res)
-})
+seu <- map2(anchors, seu, 
+            ~ MapQuery(anchorset = .x, 
+                reference = ref, 
+                query = .y, 
+                refdata = list(Zeng_celltype = 'CellType_Broad'),
+                reference.reduction = "pca", 
+                reduction.model = "umap"))
 
-preds <- lapply(seu, function(sublist){
-  sublist_new <- lapply(sublist, function(seuObj){
+preds <- lapply(seu, function(seuObj){
     df <- seuObj@meta.data %>%
       rownames_to_column('cell_label') %>% 
       select(cell_label, predicted.Zeng_celltype, predicted.Zeng_celltype.score)
     return(df)
   })
-  return(sublist_new)
-})
 
 saveRDS(preds, paste0(wd, '701_zeng_lamboPreds.rds'))
-# preds <- readRDS(paste0(wd, '701_zeng_lamboPreds.rds'))
-#
-# seu <- lapply(names(seu), function(diagnosis_or_relapse){
-#   sublist_new <- lapply(names(seu[[diagnosis_or_relapse]]), function(patient){
-#     seu[[diagnosis_or_relapse]][[patient]]@meta.data$cell_label <- rownames(seu[[diagnosis_or_relapse]][[patient]]@meta.data)
-#     seu[[diagnosis_or_relapse]][[patient]]@meta.data <- seu[[diagnosis_or_relapse]][[patient]]@meta.data %>%
-#       left_join(preds[[diagnosis_or_relapse]][[cell_label]] %>% rownames_to_column('cell_label'),
-#                 by = 'cell_label') %>%
-#       column_to_rownames(var = 'cell_label')
-#     return(seu[[diagnosis_or_relapse]][[patient]])
-#   })
-#   names(sublist_new) <- names(seu[[diagnosis_or_relapse]])
-#   return(sublist_new)
-# })
-# names(seu) <- names(preds)
 
-pred_embeddings <- lapply(seu, function(sublist){
-  sublist_new <- lapply(sublist, function(seuObj){
+pred_embeddings <- lapply(seu, function(seuObj){
     pca <- Embeddings(seuObj[["ref.pca"]])
     umap <- Embeddings(seuObj[["ref.umap"]])
     out <- list('pca' = pca, 'umap' = umap)
     return(out)
   })
-  return(sublist_new)
-})
 
 saveRDS(pred_embeddings, paste0(wd, '702_zeng_lamboPred_embeddings.rds'))
 # pred_embeddings <- readRDS(paste0(wd, '702_zeng_lamboPred_embeddings.rds'))
@@ -168,29 +120,24 @@ saveRDS(pred_embeddings, paste0(wd, '702_zeng_lamboPred_embeddings.rds'))
 # })
 
 ## 2.3. Visualize --------------------------------------------------------------
-query_data <- lapply(names(seu), function(diagnosis_or_relapse){
-  sublist_new <- lapply(names(seu[[diagnosis_or_relapse]]), function(sample_name){
-    seu[[diagnosis_or_relapse]][[sample_name]]@meta.data$cell_label <- rownames(seu[[diagnosis_or_relapse]][[sample_name]]@meta.data)
-    df <- Embeddings(seu[[diagnosis_or_relapse]][[sample_name]][['ref.umap']]) %>%
+query_data <- lapply(names(seu), function(sample_name){
+ seu[[sample_name]]@meta.data$cell_label <- rownames(seu[[sample_name]]@meta.data)
+    df <- Embeddings(seu[[sample_name]][['ref.umap']]) %>%
       as.data.frame() %>%
       mutate(patient = sample_name) %>%
       rename(UMAP_1 = refUMAP_1,
              UMAP_2 = refUMAP_2) %>%
       tibble::rownames_to_column(var = 'cell_label') %>%
-      left_join(seu[[diagnosis_or_relapse]][[sample_name]]@meta.data %>% 
+      left_join(seu[[sample_name]]@meta.data %>% 
                   select(cell_label, predicted.Zeng_celltype.score),
                 by = 'cell_label')
     return(df)
-  })
-  names(sublist_new) <- names(seu[[diagnosis_or_relapse]])
-  return(sublist_new)
 })
 names(query_data) <- names(seu)
 
 ### 2.3.1. UMAP colored by cell density
-plotlist <- lapply(names(seu), function(diagnosis_or_relapse){
-  plts <- lapply(names(seu[[diagnosis_or_relapse]]), function(sample_name){
-    plt <- query_data[[diagnosis_or_relapse]][[sample_name]] %>%
+plotlist <- lapply(names(seu), function(sample_name){
+    plt <- query_data[[sample_name]] %>%
       ggplot(aes(x = UMAP_1, y = UMAP_2)) +
       geom_point(data = ref_data, color = '#E3E3E3', size = 0.05, alpha = 0.5) +
       ggpointdensity::geom_pointdensity(size = 0.2) +
@@ -202,39 +149,19 @@ plotlist <- lapply(names(seu), function(diagnosis_or_relapse){
                      legend.position = 'none')
     return(plt)
   })
-  names(plts) <- names(seu[[diagnosis_or_relapse]])
-  return(plts)
-})
 names(plotlist) <- names(seu)
 
-pdf(paste0(wd, '705_lambo_umapAndy_density.pdf'), height = 5.5, width = 14)
-
-ggarrange(plotlist[['dx']][['AML12_DX']], plotlist[['rel']][['AML12_REL']], nrow = 1, ncol = 2) +
-  plot_annotation(title = 'Lambo et al 2023, projected onto Zeng et al 2023')
-
-ggarrange(plotlist[['dx']][['AML13_DX']], plotlist[['rel']][['AML13_REL']], nrow = 1, ncol = 2) +
-  plot_annotation(title = 'Lambo et al 2023, projected onto Zeng et al 2023')
-
-ggarrange(plotlist[['dx']][['AML14_DX']], ggplot() + theme_void(), nrow = 1, ncol = 2) +
-  plot_annotation(title = 'Lambo et al 2023, projected onto Zeng et al 2023')
-
-ggarrange(plotlist[['dx']][['AML15_DX']], plotlist[['rel']][['AML15_REL']], nrow = 1, ncol = 2) +
-  plot_annotation(title = 'Lambo et al 2023, projected onto Zeng et al 2023')
-
-ggarrange(plotlist[['dx']][['AML16_DX']], plotlist[['rel']][['AML16_REL']], nrow = 1, ncol = 2) +
-  plot_annotation(title = 'Lambo et al 2023, projected onto Zeng et al 2023')
-
+pdf(paste0(wd, '705_lambo_umapAndy_density.pdf'), height = 3.5, width = 18)
+ggarrange(plotlist = plotlist, nrow = 1, ncol = length(plotlist))
 dev.off()
 
 ### 2.3.3. UMAP colored by cell type prediction confidence
-
-plotlist <- lapply(names(seu), function(diagnosis_or_relapse){
-  plts <- lapply(names(seu[[diagnosis_or_relapse]]), function(sample_name){
-    plt <- query_data[[diagnosis_or_relapse]][[sample_name]] %>%
+plotlist <- lapply(names(seu), function(sample_name){
+    plt <- query_data[[sample_name]] %>%
       ggplot(aes(x = UMAP_1, y = UMAP_2)) +
       geom_point(data = ref_data, color = '#E3E3E3', size = 0.05, alpha = 0.5) +
       geom_point(aes(colour = predicted.Zeng_celltype.score),
-                 data = query_data[[diagnosis_or_relapse]][[sample_name]],
+                 data = query_data[[sample_name]],
                  size = 0.05) +
       scale_color_viridis_c(begin = 0,
                             end = 1,
@@ -247,31 +174,13 @@ plotlist <- lapply(names(seu), function(diagnosis_or_relapse){
                      legend.position = 'bottom')
     return(plt)
   })
-  names(plts) <- names(seu[[diagnosis_or_relapse]])
-  return(plts)
-})
 names(plotlist) <- names(seu)
 
-pdf(paste0(wd, '710_lambo_umapAndy_predConfidence.pdf'), height = 6, width = 14)
-
-ggarrange(plotlist[['dx']][['AML12_DX']], plotlist[['rel']][['AML12_REL']], nrow = 1, ncol = 2, common.legend = FALSE) +
-  plot_annotation(title = 'Lambo et al 2023, projected onto Zeng et al 2023')
-
-ggarrange(plotlist[['dx']][['AML13_DX']], plotlist[['rel']][['AML13_REL']], nrow = 1, ncol = 2, common.legend = FALSE) +
-  plot_annotation(title = 'Lambo et al 2023, projected onto Zeng et al 2023')
-
-ggarrange(plotlist[['dx']][['AML14_DX']], ggplot() + theme_void(), nrow = 1, ncol = 2) +
-  plot_annotation(title = 'Lambo et al 2023, projected onto Zeng et al 2023')
-
-ggarrange(plotlist[['dx']][['AML15_DX']], plotlist[['rel']][['AML15_REL']], nrow = 1, ncol = 2, common.legend = FALSE) +
-  plot_annotation(title = 'Lambo et al 2023, projected onto Zeng et al 2023')
-
-ggarrange(plotlist[['dx']][['AML16_DX']], plotlist[['rel']][['AML16_REL']], nrow = 1, ncol = 2, common.legend = FALSE) +
-  plot_annotation(title = 'Lambo et al 2023, projected onto Zeng et al 2023')
-
+pdf(paste0(wd, '710_lambo_umapAndy_predConfidence.pdf'), height = 4, width = 18)
+ggarrange(plotlist = plotlist, nrow = 1, ncol = length(plotlist), common.legend = FALSE)
 dev.off()
 
 # 98. Session info ==============================================================
-sink(paste0(wd, '999_sessionInfo_3.txt'))
+sink(paste0(wd, '999_sessionInfo_5.txt'))
 sessionInfo()
 sink()
