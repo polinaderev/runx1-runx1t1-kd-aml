@@ -110,60 +110,6 @@ anchors <- lapply(seu, function(sublist){
                                      npcs = 30))
   })
 
-anc16 <- FindTransferAnchors(reference = ref, 
-                            query = seu[['AML16']], 
-                            dims = 1:30, 
-                            npcs = 30,
-                            reference.reduction = "pca")
-#saveRDS(anc16, paste0(wd, '700_anchrs_zeng_lambo_aml16_DX.rds'))
-saveRDS(anc16, paste0(wd, '700_anchrs_zeng_lambo_aml16_REL.rds'))
-
-anc15 <- FindTransferAnchors(reference = ref, 
-                            query = seu[['AML15']], 
-                            dims = 1:30, 
-                            npcs = 30,
-                            reference.reduction = "pca")
-#saveRDS(anc15, paste0(wd, '700_anchrs_zeng_lambo_aml15.rds'))
-saveRDS(anc15, paste0(wd, '700_anchrs_zeng_lambo_aml15_REL.rds'))
-
-anc14 <- FindTransferAnchors(reference = ref, 
-                             query = seu[['AML14']], 
-                             dims = 1:30, 
-                             npcs = 30,
-                             reference.reduction = "pca")
-saveRDS(anc14, paste0(wd, '700_anchrs_zeng_lambo_aml14.rds'))
-
-anc13 <- FindTransferAnchors(reference = ref, 
-                             query = seu[['AML13']], 
-                             dims = 1:30, 
-                             npcs = 30,
-                             reference.reduction = "pca")
-#saveRDS(anc13, paste0(wd, '700_anchrs_zeng_lambo_aml13.rds'))
-saveRDS(anc13, paste0(wd, '700_anchrs_zeng_lambo_aml13_REL.rds'))
-
-anc12 <- FindTransferAnchors(reference = ref, 
-                             query = seu[['AML12']], 
-                             dims = 1:30, 
-                             npcs = 30,
-                             reference.reduction = "pca")
-#saveRDS(anc12, paste0(wd, '700_anchrs_zeng_lambo_aml12.rds'))
-saveRDS(anc12, paste0(wd, '700_anchrs_zeng_lambo_aml12_REL.rds'))
-
-anc16 <- readRDS(paste0(wd, '700_anchrs_zeng_lambo_aml16.rds'))
-anc15 <- readRDS(paste0(wd, '700_anchrs_zeng_lambo_aml15.rds'))
-anc14 <- readRDS(paste0(wd, '700_anchrs_zeng_lambo_aml14.rds'))
-anc13 <- readRDS(paste0(wd, '700_anchrs_zeng_lambo_aml13.rds'))
-anc12 <- readRDS(paste0(wd, '700_anchrs_zeng_lambo_aml12.rds'))
-
-anchors_dx <- list(anc16, anc15, anc14, 
-                anc13, anc12)
-names(anchors_dx) <- names(seu[['dx']])
-
-anchors <- list(
-  'dx' = anchors_dx,
-  'rel' = anchors_rel
-)
-
 seu <- map2(anchors, seu, function(anchor_sublist, seu_sublist){
   res <- map2(anchor_sublist, seu_sublist,
        ~ MapQuery(anchorset = .x, 
@@ -177,24 +123,30 @@ seu <- map2(anchors, seu, function(anchor_sublist, seu_sublist){
 
 preds <- lapply(seu, function(sublist){
   sublist_new <- lapply(sublist, function(seuObj){
-    df <- seuObj@meta.data
-    df$cell_label <- rownames(df)
-    df <- df %>% select(cell_label, predicted.Zeng_celltype, predicted.Zeng_celltype.score)
+    df <- seuObj@meta.data %>%
+      rownames_to_column('cell_label') %>% 
+      select(cell_label, predicted.Zeng_celltype, predicted.Zeng_celltype.score)
     return(df)
   })
-  return(sublist)
+  return(sublist_new)
 })
 
 saveRDS(preds, paste0(wd, '701_zeng_lamboPreds.rds'))
 # preds <- readRDS(paste0(wd, '701_zeng_lamboPreds.rds'))
-# 
-# seu <- map2(seu, preds, function(seuObj, prediction_df){
-#   seuObj@meta.data$cell_label <- rownames(seuObj@meta.data)
-#   seuObj@meta.data <- seuObj@meta.data %>%
-#     left_join(prediction_df, by = 'cell_label')
-#   rownames(seuObj@meta.data) <- seuObj$cell_label
-#   return(seuObj)
+#
+# seu <- lapply(names(seu), function(diagnosis_or_relapse){
+#   sublist_new <- lapply(names(seu[[diagnosis_or_relapse]]), function(patient){
+#     seu[[diagnosis_or_relapse]][[patient]]@meta.data$cell_label <- rownames(seu[[diagnosis_or_relapse]][[patient]]@meta.data)
+#     seu[[diagnosis_or_relapse]][[patient]]@meta.data <- seu[[diagnosis_or_relapse]][[patient]]@meta.data %>%
+#       left_join(preds[[diagnosis_or_relapse]][[cell_label]] %>% rownames_to_column('cell_label'),
+#                 by = 'cell_label') %>%
+#       column_to_rownames(var = 'cell_label')
+#     return(seu[[diagnosis_or_relapse]][[patient]])
+#   })
+#   names(sublist_new) <- names(seu[[diagnosis_or_relapse]])
+#   return(sublist_new)
 # })
+# names(seu) <- names(preds)
 
 pred_embeddings <- lapply(seu, function(sublist){
   sublist_new <- lapply(sublist, function(seuObj){
