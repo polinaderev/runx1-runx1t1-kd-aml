@@ -14,7 +14,6 @@ kdmm_palette <- c('RUNX1::RUNX1T1 knockdown' = '#f41626', 'mismatch control'= '#
 cbPalette <- c("#E69F00", "#56B4E9","#009E73", "#F0E442", "#0072B2","#D55E00", "#CC79A7", "#999999")
 
 in_path <- 'flow_ptABD/in/' ##### Folder with input files. Replace with your path
-names(in_path) <- c('EX68', 'EX77')
 wd <- 'flow_ptABD/out/' ##### output directory. Replace with your path
 
 ##### reproducibility
