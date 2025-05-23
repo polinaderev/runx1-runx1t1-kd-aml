@@ -13,8 +13,8 @@ library(ggpubr)
 kdmm_palette <- c('RUNX1::RUNX1T1 knockdown' = '#f41626', 'mismatch control'= '#2538a5')
 cbPalette <- c("#E69F00", "#56B4E9","#009E73", "#F0E442", "#0072B2","#D55E00", "#CC79A7", "#999999")
 
-in_path <- 'flow_ptABD/in/' ##### Folder with input files. Replace with your path
-wd <- 'flow_ptABD/out/' ##### output directory. Replace with your path
+in_path <- 'repos/runx1eto-kd-aml/flow_ptABD/in/01_flowjo_EX68/' ##### Folder with input files. Replace with your path
+wd <- 'repos/runx1eto-kd-aml/flow_ptABD/out/' ##### output directory. Replace with your path
 
 ##### reproducibility
 set.seed(42)
@@ -314,7 +314,9 @@ myplot <- ggarrange(plotlist = plotlist, ncol = 3, nrow = 3)
 print(myplot)
 dev.off()
 
-# 6. Plot the 'double exposure' tSNEs for CD34 and CD38 (Suppl. Figure 6D) =====
+# 6. Plot the 'double exposure' tSNEs ==========================================
+
+## 6.1. For CD34 and CD38 (Suppl. Figure 6D) -----------------------------------
 dat_downsampled$CD34_adj <- dat_downsampled[, 'CD34-APC'] - thresholds_scaled['CD34-APC']
 dat_downsampled$CD34_adj[dat_downsampled$CD34_adj < 0] <- 0
 max_cd34 <- max(dat_downsampled$CD34_adj)
@@ -326,6 +328,8 @@ max_cd38 <- max(dat_downsampled$CD38_adj)
 dat_downsampled$CD38_adj <- dat_downsampled$CD38_adj/max_cd38
 
 dat_downsampled$cd34_38_color <- mapply(function(x,y) rgb(0, x, y), dat_downsampled$CD34_adj, dat_downsampled$CD38_adj)
+dat_downsampled <- dat_downsampled %>%
+  mutate(cd34_38_color = ifelse(cd34_38_color == '#000000', '#BEBEBE', cd34_38_color))
 
 saveRDS(dat_downsampled, paste0(wd, '990_data_forPlotting.rds'))
 ##### dat_downsampled <- readRDS(paste0(wd, '990_data_forPlotting.rds'))
@@ -348,7 +352,7 @@ legend_plot <- ggplot(legend_space,
   labs(x = 'CD38 scaled expression',
        y = 'CD34 scaled expression')
 
-tsne <- ggplot(dat_downsampled,
+tsne <- ggplot(dat_downsampled %>% arrange(desc(cd34_38_color == '#BEBEBE'), cd34_38_color),
                aes(x = tSNE1, y = tSNE2, color = I(cd34_38_color))) +
   geom_point(size = 0.1) +
   facet_grid(condition ~ .,
@@ -363,6 +367,112 @@ tsne <- ggplot(dat_downsampled,
 
 ggarrange(tsne, legend_plot, nrow = 1, ncol = 2)
   
+dev.off()
+
+## 6.2. For CD14 and CD15 ------------------------------------------------------
+dat_downsampled$CD14_adj <- dat_downsampled[, 'CD14-FITC'] - thresholds_scaled['CD14-FITC']
+dat_downsampled$CD14_adj[dat_downsampled$CD14_adj < 0] <- 0
+max_cd14 <- max(dat_downsampled$CD14_adj)
+dat_downsampled$CD14_adj <- dat_downsampled$CD14_adj/max_cd14
+
+dat_downsampled$CD15_adj <- dat_downsampled[, 'CD15-BV510'] - thresholds_scaled['CD15-BV510']
+dat_downsampled$CD15_adj[dat_downsampled$CD15_adj < 0] <- 0
+max_cd15 <- max(dat_downsampled$CD15_adj)
+dat_downsampled$CD15_adj <- dat_downsampled$CD15_adj/max_cd15
+
+dat_downsampled$cd14_15_color <- mapply(function(x,y) rgb(0, x, y), dat_downsampled$CD14_adj, dat_downsampled$CD15_adj)
+dat_downsampled <- dat_downsampled %>%
+  mutate(cd14_15_color = ifelse(cd14_15_color == '#000000', '#BEBEBE', cd14_15_color))
+
+saveRDS(dat_downsampled, paste0(wd, '990_data_forPlotting.rds'))
+##### dat_downsampled <- readRDS(paste0(wd, '990_data_forPlotting.rds'))
+
+pdf(paste0(wd, '080_tSNE_CD14-15_doubleExposure.pdf'),
+    height = 5.5, width = 6)
+
+##### manual legend
+legend_space <- expand.grid(CD15 = seq(0, 1, length.out = 10),
+                            CD14 = seq(0, 1, length.out = 10))
+legend_space$color <- apply(legend_space, 1, function(x){
+  rgb(0, x[2], x[1], maxColorValue = 1)
+})
+
+legend_plot <- ggplot(legend_space,
+                      aes(x = CD15, y = CD14, fill = I(color))) +
+  geom_tile() +
+  coord_fixed() +
+  theme_bw() +
+  labs(x = 'CD15 scaled expression',
+       y = 'CD14 scaled expression')
+
+tsne <- ggplot(dat_downsampled %>% arrange(desc(cd14_15_color == '#BEBEBE'), cd14_15_color),
+               aes(x = tSNE1, y = tSNE2, color = I(cd14_15_color))) +
+  geom_point(size = 0.1) +
+  facet_grid(condition ~ .,
+             labeller = as_labeller(c(
+               'RUNX1::RUNX1T1 knockdown' = 'RUNX1::RUNX1T1 KD',
+               'mismatch control' = 'mismatch control'
+             ))) +
+  theme_bw() +
+  theme(axis.text.x = element_blank(),  
+        axis.text.y = element_blank(),  
+        axis.ticks = element_blank())
+
+ggarrange(tsne, legend_plot, nrow = 1, ncol = 2)
+
+dev.off()
+
+## 6.3. For CD125 and CD193 ------------------------------------------------------
+dat_downsampled$CD125_adj <- dat_downsampled[, 'CD125-PE'] - thresholds_scaled['CD125-PE']
+dat_downsampled$CD125_adj[dat_downsampled$CD125_adj < 0] <- 0
+max_cd125 <- max(dat_downsampled$CD125_adj)
+dat_downsampled$CD125_adj <- dat_downsampled$CD125_adj/max_cd125
+
+dat_downsampled$CD193_adj <- dat_downsampled[, 'CD193-BV605'] - thresholds_scaled['CD193-BV605']
+dat_downsampled$CD193_adj[dat_downsampled$CD193_adj < 0] <- 0
+max_cd193 <- max(dat_downsampled$CD193_adj)
+dat_downsampled$CD193_adj <- dat_downsampled$CD193_adj/max_cd193
+
+dat_downsampled$cd125_193_color <- mapply(function(x,y) rgb(0, x, y), dat_downsampled$CD125_adj, dat_downsampled$CD193_adj)
+dat_downsampled <- dat_downsampled %>%
+  mutate(cd125_193_color = ifelse(cd125_193_color == '#000000', '#BEBEBE', cd125_193_color))
+
+saveRDS(dat_downsampled, paste0(wd, '990_data_forPlotting.rds'))
+##### dat_downsampled <- readRDS(paste0(wd, '990_data_forPlotting.rds'))
+
+pdf(paste0(wd, '090_tSNE_CD125-193_doubleExposure.pdf'),
+    height = 5.5, width = 6)
+
+##### manual legend
+legend_space <- expand.grid(CD193 = seq(0, 1, length.out = 10),
+                            CD125 = seq(0, 1, length.out = 10))
+legend_space$color <- apply(legend_space, 1, function(x){
+  rgb(0, x[2], x[1], maxColorValue = 1)
+})
+
+legend_plot <- ggplot(legend_space,
+                      aes(x = CD193, y = CD125, fill = I(color))) +
+  geom_tile() +
+  coord_fixed() +
+  theme_bw() +
+  labs(x = 'CD193 scaled expression',
+       y = 'CD125 scaled expression')
+
+tsne <- ggplot(dat_downsampled %>% arrange(desc(cd125_193_color == '#BEBEBE'), cd125_193_color),
+               aes(x = tSNE1, y = tSNE2, color = I(cd125_193_color))) +
+  geom_point(size = 0.1) +
+  facet_grid(condition ~ .,
+             labeller = as_labeller(c(
+               'RUNX1::RUNX1T1 knockdown' = 'RUNX1::RUNX1T1 KD',
+               'mismatch control' = 'mismatch control'
+             ))) +
+  theme_bw() +
+  theme(axis.text.x = element_blank(),  
+        axis.text.y = element_blank(),  
+        axis.ticks = element_blank())
+
+ggarrange(tsne, legend_plot, nrow = 1, ncol = 2)
+
 dev.off()
 
 # 99. Session info =============================================================
