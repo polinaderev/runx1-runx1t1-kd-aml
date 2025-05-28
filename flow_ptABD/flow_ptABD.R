@@ -335,7 +335,7 @@ saveRDS(dat_downsampled, paste0(wd, '990_data_forPlotting.rds'))
 ##### dat_downsampled <- readRDS(paste0(wd, '990_data_forPlotting.rds'))
 
 pdf(paste0(wd, '070_tSNE_CD34-38_doubleExposure.pdf'),
-    height = 5.5, width = 6)
+    height = 4, width = 5)
 
 ##### manual legend
 legend_space <- expand.grid(CD38 = seq(0, 1, length.out = 10),
@@ -388,7 +388,7 @@ saveRDS(dat_downsampled, paste0(wd, '990_data_forPlotting.rds'))
 ##### dat_downsampled <- readRDS(paste0(wd, '990_data_forPlotting.rds'))
 
 pdf(paste0(wd, '080_tSNE_CD14-15_doubleExposure.pdf'),
-    height = 5.5, width = 6)
+    height = 4, width = 5)
 
 ##### manual legend
 legend_space <- expand.grid(CD15 = seq(0, 1, length.out = 10),
@@ -441,7 +441,7 @@ saveRDS(dat_downsampled, paste0(wd, '990_data_forPlotting.rds'))
 ##### dat_downsampled <- readRDS(paste0(wd, '990_data_forPlotting.rds'))
 
 pdf(paste0(wd, '090_tSNE_CD125-193_doubleExposure.pdf'),
-    height = 5.5, width = 6)
+    height = 4, width = 5)
 
 ##### manual legend
 legend_space <- expand.grid(CD193 = seq(0, 1, length.out = 10),
