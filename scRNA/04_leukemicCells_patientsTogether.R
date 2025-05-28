@@ -418,6 +418,43 @@ FeaturePlot(seu_integr,
         legend.position = 'bottom')
 dev.off()
 
+##### Additional genes requested by Olaf on 20250528
+goi <- c('ELANE', 'CTSG', 'MPO', 'CLEC12A')
+
+plts <- map(goi,
+            ~ FeaturePlot(seu_integr,
+                          features = .x,
+                          order = TRUE) +
+              scale_colour_viridis() +
+              scale_colour_viridis(limits = c(quantile(seu_integr$RNA@data[.x,], probs = 0.05), 
+                                              quantile(seu_integr$RNA@data[.x,], probs = 0.95)),
+                                   oob = scales::squish) +
+            theme(axis.line = element_blank(),
+                  axis.text.x = element_blank(),
+                  axis.text.y = element_blank(),
+                  axis.ticks = element_blank(),
+                  axis.title.x = element_blank(),
+                  axis.title.y = element_blank(),
+                  legend.position = 'bottom'))
+
+pdf(paste0(wd, '545_integr_umap_genes_eo.pdf'), height = 3.5, width = length(goi)*2 + 1)
+FeaturePlot(seu_integr,
+            features = goi,
+            order = TRUE,
+            ncol = length(goi)) &
+  scale_colour_viridis() &
+  theme(axis.line = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = 'bottom')
+
+ggarrange(plotlist = plts, nrow = 1, ncol = length(goi), common.legend = FALSE)
+
+dev.off()
+
 ## 5.2. UMAP split by condition (Figure 7A) ------------------------------------
 goi <- 'CD34'
 cd34_max <- max(
