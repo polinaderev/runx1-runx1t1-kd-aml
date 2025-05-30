@@ -62,7 +62,7 @@ ci_df <- data.frame(
 p <- ggplot(df, 
             aes(x = dose, y = log_nonres, color = group)) +
   geom_point(aes(shape = pch_type), size = 3) +
-  #scale_shape_manual(values = c(partial = 1, full = 6)) +
+  scale_shape_manual(values = c("100%" = 1, "<100%" = 6)) +
   labs(
     x = "Number of cells seeded",
     y = "ln(fraction of wells without cells)",
