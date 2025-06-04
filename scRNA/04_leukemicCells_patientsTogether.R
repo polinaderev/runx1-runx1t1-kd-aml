@@ -455,6 +455,44 @@ ggarrange(plotlist = plts, nrow = 1, ncol = length(goi), common.legend = FALSE)
 
 dev.off()
 
+##### additional genes requested by Olaf on 20250604
+goi <- c('CEBPA', 'CEBPB', 'CEBPD', 'GATA1', 'GATA3', 'IKZF2')
+
+plts <- map(goi,
+            ~ FeaturePlot(seu_integr,
+                          features = .x,
+                          order = TRUE) +
+              scale_colour_viridis() +
+              scale_colour_viridis(limits = c(quantile(seu_integr$RNA@data[.x,], probs = 0.01), 
+                                              quantile(seu_integr$RNA@data[.x,], probs = 0.98)),
+                                   oob = scales::squish) +
+              theme(axis.line = element_blank(),
+                    axis.text.x = element_blank(),
+                    axis.text.y = element_blank(),
+                    axis.ticks = element_blank(),
+                    axis.title.x = element_blank(),
+                    axis.title.y = element_blank(),
+                    legend.position = 'bottom'))
+
+pdf(paste0(wd, '545_integr_umap_genes_CEBP_GATA_IKZF.pdf'), height = 3.5, width = length(goi)*2 + 1)
+FeaturePlot(seu_integr,
+            features = goi,
+            order = TRUE,
+            ncol = length(goi)) &
+  scale_colour_viridis() &
+  theme(axis.line = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = 'bottom')
+
+ggarrange(plotlist = plts, nrow = 1, ncol = length(goi), common.legend = FALSE)
+
+dev.off()
+
+
 ## 5.2. UMAP split by condition (Figure 7A) ------------------------------------
 goi <- 'CD34'
 cd34_max <- max(
@@ -762,6 +800,31 @@ for (condition in names(exclusive_conditions)) {
 }
 
 writeLines(result, paste0(wd, "604_geneListsFor_nVenn.txt"))
+
+### 7.8.6. Markers of conditions, split by supercluster
+seu_split <- SplitObject(seu_integr, split.by = 'integrated_snn_res.0.025')
+
+markers <- lapply(seu_split, function(obj){
+  Idents(obj) <- 'condition'
+  mark <- FindMarkers(obj,
+                      ident.1 = 'RUNX1::RUNX1T1 knockdown',
+                      assay = 'RNA',
+                      logfc.threshold = 0,
+                      min.pct = 0)
+  return(mark)
+})
+saveRDS(markers, paste0(wd, '603_integr_bySuperclust_markers_REKD_vs_MM.rds'))
+
+markers <- markers[[2]] %>%
+  rownames_to_column(var = 'gene') %>%
+  mutate(comparison = 'Supercluster I siRE vs siMM') %>%
+  bind_rows(
+    markers[[1]] %>%
+      rownames_to_column(var = 'gene') %>%
+      mutate(comparison = 'Supercluster II siRE vs siMM')
+  )
+
+write_csv(markers, paste0(wd, '603_integr_bySuperclust_markers_REKD_vs_MM.csv'))
 
 ## 7.9. UMAP split by condition, colored by patient and with nr of cells per patient in each supercluster (Suppl. Fig. 5) ------------
 seu_cond <- SplitObject(seu_integr, split.by = 'condition')
