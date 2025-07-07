@@ -777,6 +777,46 @@ markers_df <- markers[[1]] %>%
 
 write_csv(markers_df, paste0(wd, '690_allMarkers_superclustI_vs_superclustII.csv'))
 
+# 97. Make pseudobulk counts for Assi-style GRN pictures =======================
+##### Will be used as input by Sophie Kellaway
+DefaultAssay(seu_integr) <- 'RNA'
+seu_integr@meta.data <- seu_integr@meta.data %>%
+  mutate(cond = case_when(
+    condition == 'RUNX1::RUNX1T1 knockdown' ~ 'siRE',
+    condition == 'mismatch control' ~ 'siMM',
+    TRUE ~ 'NAcond'
+  ),
+  supercl = case_when(
+    integrated_snn_res.0.025 == 1 ~ 'superclusterII',
+    integrated_snn_res.0.025 == 0 ~ 'superclusterI',
+    TRUE ~ 'NAsupercluster'
+  ),
+  cl = paste0('cluster', integrated_snn_res.0.57),
+  pat = case_when(
+    orig.ident == 'patientA' ~ 'patA',
+    orig.ident == 'patientB' ~ 'patB',
+    orig.ident == 'patientC' ~ 'patC-PDX',
+    TRUE ~ 'NApatient'
+  ),
+  pat_cond_superclust = paste0(pat, '_', cond, '_', supercl),
+  pat_cond_clust = paste0(pat, '_', cond, '_', cl))
+
+target_metadata_columns <- c('pat_cond_superclust', 'pat_cond_clust')
+
+pseudo <- lapply(target_metadata_columns, function(column_name){
+  obj <- AggregateExpression(seu_integr,
+                             assays = 'RNA',
+                             return.seurat = TRUE,
+                             group.by = column_name,
+                             slot = 'counts')
+  count <- GetAssayData(obj, assay = 'RNA', layer = 'counts') %>%
+    as.data.frame() %>%
+    rownames_to_column('gene')
+  return(count)
+})
+
+map2(pseudo, target_metadata_columns,
+     ~ write_csv(.x, paste0(wd, '695_pseudobulkCounts_by_', .y, '.csv')))
 
 # 98. Make a Seurat object to upload to Zenodo =================================
 seu_save <- seu_integr
