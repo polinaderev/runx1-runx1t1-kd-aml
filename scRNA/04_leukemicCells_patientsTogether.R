@@ -792,16 +792,10 @@ seu_integr@meta.data <- seu_integr@meta.data %>%
     TRUE ~ 'NAsupercluster'
   ),
   cl = paste0('cluster', integrated_snn_res.0.57),
-  pat = case_when(
-    orig.ident == 'patientA' ~ 'patA',
-    orig.ident == 'patientB' ~ 'patB',
-    orig.ident == 'patientC' ~ 'patC-PDX',
-    TRUE ~ 'NApatient'
-  ),
-  pat_cond_superclust = paste0(pat, '_', cond, '_', supercl),
-  pat_cond_clust = paste0(pat, '_', cond, '_', cl))
+  cond_superclust = paste0(cond, '_', supercl),
+  cond_clust = paste0(cond, '_', cl))
 
-target_metadata_columns <- c('pat_cond_superclust', 'pat_cond_clust')
+target_metadata_columns <- c('cond_superclust', 'cond_clust')
 
 pseudo <- lapply(target_metadata_columns, function(column_name){
   obj <- AggregateExpression(seu_integr,
