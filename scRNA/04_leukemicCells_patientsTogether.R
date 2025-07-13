@@ -401,7 +401,7 @@ dev.off()
 DefaultAssay(seu_integr) <- 'RNA'
 
 ## 5.1. UMAP not split (Figures 5C, S5E) ---------------------------------------
-goi <- c('CD24', 'IL5RA', 'RETN', 'SERPINA1', 'RNASE2', 'CEBPE', 'GATA2')
+goi <- c('CD24', 'IL5RA', 'RETN', 'SERPINA1', 'RNASE2', 'CEBPE', 'GATA2', 'CEBPA', 'CEBPB', 'CEBPD')
 
 pdf(paste0(wd, '545_integr_umap_genes_mono_granulo_eo_CD24_Cd125.pdf'), height = 3.5, width = length(goi)*2 + 2)
 FeaturePlot(seu_integr,
