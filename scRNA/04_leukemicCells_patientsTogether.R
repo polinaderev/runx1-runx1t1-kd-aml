@@ -160,7 +160,8 @@ DimPlot(seu_integr,
   theme(legend.position = 'bottom')
 dev.off()
 
-# 3. Add the cell type predictions (Zeng et al reference) and visualize ========
+# 3. Add the cell type predictions and embeddings (Zeng et al reference) and visualize ====
+
 ## 3.1. Add predictions and their scores ---------------------------------------
 
 ### 3.1.1. Load the cell type predictions
@@ -235,6 +236,124 @@ ggplot(seu_integr@meta.data,
   stat_compare_means(comparisons = list(c('mismatch control', 'RUNX1::RUNX1T1 knockdown')), 
                      method = 'wilcox.test',
                      label = "p.format")
+dev.off()
+
+## 3.2. Find markers for cell types and visualize ------------------------------
+
+### 3.2.1. Find the markers
+Idents(seu_integr) <- 'pred.Zeng.celltype'
+DefaultAssay(seu_integr) <- 'RNA'
+
+markers <- FindAllMarkers(seu_integr,
+                          assay = 'RNA',
+                          logfc.threshold = 0.1,
+                          min.pct = 0.01,
+                          only.pos = TRUE)
+saveRDS(markers, paste0(wd, '530_zengCelltypes_markers.rds'))
+
+### 3.2.2. Plot a heatmap with top markers -------------------------------------
+markers <- markers %>%
+  group_by(cluster) %>%
+  dplyr::filter(avg_log2FC > 0.1 & p_val_adj < 0.05) %>%
+  dplyr::filter(pct.1 > 0.1 | pct.2 > 0.1) %>%
+  arrange(desc(avg_log2FC)) %>%
+  dplyr::slice_max(avg_log2FC, n = 10)
+
+markers$cluster <- as.character(markers$cluster)
+seu_integr@meta.data$pred.Zeng.celltype <- as.character(seu_integr@meta.data$pred.Zeng.celltype)
+
+pdf(paste0(wd, '531_integr_heatmap_ZengCelltypes_markers.pdf'), height = 11, width = 15)
+DoHeatmap(seu_integr %>% subset(subset = pred.Zeng.celltype %in% unique(markers$cluster)), 
+          group.by = 'pred.Zeng.celltype',
+          features = markers$gene,
+          assay = "integrated",
+          slot = "scale.data",
+          group.bar = TRUE,
+          group.colors = zengPalette) +
+  scale_fill_viridis() +
+  theme(legend.position = 'none')
+dev.off()
+
+## 3.3. Add the UMAP coordinates of my cells in Andy's UMAP coordinates and visualize ----
+
+### 3.3.1. Load the embeddings (produced in scRNA/03_leukemicCells_patientsSeparately.R)
+pred_embeddings <- readRDS(paste0(wd, '379_zengEmbeddings.rds'))
+
+### 3.3.2. Fix the cell names
+add <- c('1', '2', '3')
+
+pred_embeddings <- map2(pred_embeddings, add, function(embedding_sublist, suffix){
+  embedding_sublist_new <- lapply(embedding_sublist, function(embedding_df){
+    rownames(embedding_df) <- paste0(rownames(embedding_df), '_', suffix)
+    embedding_df <- embedding_df %>% as.data.frame() %>% rownames_to_column('cell_label')
+    return(embedding_df)
+  })
+  return(embedding_sublist_new)
+})
+
+emb <- lapply(names(pred_embeddings[[1]]), function(pca_or_umap){
+  df <- rbind(pred_embeddings[[1]][[pca_or_umap]],
+              pred_embeddings[[2]][[pca_or_umap]],
+              pred_embeddings[[3]][[pca_or_umap]])
+  df <- df %>%
+    filter(cell_label %in% colnames(seu_integr)) %>%
+    column_to_rownames('cell_label')
+  return(df)
+})
+names(emb) <- names(pred_embeddings[[1]])
+
+seu_integr[['ref.pca']] <- CreateDimReducObject(as.matrix(emb[['pca']]))
+seu_integr[['ref.umap']] <- CreateDimReducObject(as.matrix(emb[['umap']]))
+
+### 3.3.3. Vizualise
+
+#### 3.3.3.1. Integrated object in Andy's UMAP coordinates, colored by cell density
+ref_data <- Embeddings(subset(ref, downsample = 50000)[["umap"]]) %>%
+  as.data.frame() 
+
+query_data <- Embeddings(seu_integr[['ref.umap']]) %>%
+  as.data.frame() %>%
+  rename(UMAP_1 = refUMAP_1,
+         UMAP_2 = refUMAP_2) %>%
+  rownames_to_column(var = 'cell_label') %>%
+  left_join(seu_integr@meta.data %>% rownames_to_column('cell_label') %>% select(cell_label, condition),
+            by = 'cell_label')
+
+pdf(paste0(wd, '533_integr_umapZeng.pdf'), height = 3.5, width = 3.5)
+ggplot(query_data,
+       aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(data = ref_data, color = '#E3E3E3', size = 0.05, alpha = 0.5) +
+  ggpointdensity::geom_pointdensity(size = 0.2) +
+  jcolors::scale_color_jcolors_contin("pal3", reverse = TRUE, bias = 1.75) +
+  geom_density_2d(alpha = 0.4, color = 'black', h = 1.5, linewidth = 0.3) +
+  theme_void() +
+  ggplot2::theme(strip.text.x = ggplot2::element_text(size = 18), 
+                 legend.position = 'none')
+dev.off()
+
+#### 3.3.3.1. Integrated object in Andy's UMAP coordinates, colored by cell density, split by condition
+query_data <- lapply(unique(seu_integr@meta.data$condition),
+                     function(MM_or_KD){
+                       df <- query_data %>%
+                         filter(condition == MM_or_KD)
+                       return(df)
+                     })
+names(query_data) <- unique(seu_integr@meta.data$condition)
+
+plotlist <- map2(query_data, names(query_data),
+                 ~ .x %>%
+                   ggplot(aes(x = UMAP_1, y = UMAP_2)) +
+                   geom_point(data = ref_data, color = '#E3E3E3', size = 0.05, alpha = 0.5) +
+                   ggpointdensity::geom_pointdensity(size = 0.2) +
+                   jcolors::scale_color_jcolors_contin("pal3", reverse = TRUE, bias = 1.75) +
+                   geom_density_2d(alpha = 0.4, color = 'black', h = 1.5, linewidth = 0.3) +
+                   theme_void() + 
+                   labs(subtitle = .y) +
+                   ggplot2::theme(strip.text.x = ggplot2::element_text(size = 18), 
+                                  legend.position = 'bottom'))
+
+pdf(paste0(wd, '534_integr_byCond_umapZeng.pdf'), height = 4, width = 8)
+ggarrange(plotlist = plotlist, nrow = 1, ncol = 2)
 dev.off()
 
 # 4. Find the bone marrow cell type module scores ==============================
@@ -607,6 +726,36 @@ for (condition in names(exclusive_conditions)) {
 
 writeLines(result, paste0(wd, "604_geneListsFor_nVenn.txt"))
 
+## 7.9. UMAP split by condition, colored by patient and with nr of cells per patient in each supercluster (Suppl. Fig. 5) ------------
+seu_cond <- SplitObject(seu_integr, split.by = 'condition')
+
+pdf(paste0(wd, '604_integr_umap_2clust_byCond_byPt.pdf'), width = 3, height = 3.5)
+map2(seu_cond, names(seu_cond),
+     ~ DimPlot(.x,
+               reduction = 'umap',
+               group.by = 'orig.ident',
+               cols = c(cbPalette[1], cbPalette[3], cbPalette[5]),
+               shuffle = TRUE) +
+       theme_void() +
+       labs(title = NULL, subtitle = .y) +
+       theme(legend.position = 'bottom'))
+dev.off()
+
+map(seu_cond, ~ table(.x@meta.data$integrated_snn_res.0.025, .x@meta.data$orig.ident))
+
+# $`RUNX1::RUNX1T1 knockdown`
+# 
+# patientA patientB patientC
+# 0      997      745     1341
+# 1      552      804      208
+# 
+# $`mismatch control`
+# 
+# patientA patientB patientC
+# 0      839      941     1362
+# 1      710      608      187
+
+
 # 8. High resolution clustering analysis =======================================
 
 ## 8.1. Cluster ----------------------------------------------------------------
@@ -648,15 +797,14 @@ markers <- dplyr::filter(markers, avg_log2FC > 0.1 & p_val_adj < 0.05) %>%
   arrange(desc(avg_log2FC)) %>%
   dplyr::slice_max(avg_log2FC, n = 10)
 
-pdf(paste0(wd, '620_integr_heatmap_hiResClust_markers.pdf'), height = 8, width = 5)
+pdf(paste0(wd, '621_integr_heatmap_hiResClust_markers.pdf'), height = 8, width = 5)
 DoHeatmap(seu_integr, 
           group.by = 'integrated_snn_res.0.57',
           features = markers$gene,
           assay = "integrated",
           slot = "scale.data",
           group.bar = TRUE,
-          group.colors = cbPalette2) + 
-  NoLegend() +
+          group.colors = cbPalette2) +
   scale_fill_viridis()
 dev.off()
 
