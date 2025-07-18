@@ -176,7 +176,7 @@ saveRDS(dds, paste0(out_dir, '015_deseq2_out.rds'))
 
 # 4. Transformations and filtering of DESeq2 output ============================
 
-## 4.1. Make a data frame with DESeq2 output (Suppl. Table 5) ------------------
+## 4.1. Make a data frame with DESeq2 output (Suppl. Table 6) ------------------
 res <- results(dds)
 
 res_df <- as.data.frame(res) %>% 
@@ -196,6 +196,7 @@ colnames(z) <- colnames(rld)
 ## 4.4. Remove NAs from the results --------------------------------------------
 res_ex <- drop_na(res_df, log2FoldChange, padj)
 
+## 4.5. Filter by significance and log2FC --------------------------------------
 res_sign <- dplyr::filter(res_ex, padj < 0.05 & baseMean > 50)
 
 res_sel_top <- slice_max(res_sign, log2FoldChange, n = 50) %>% arrange(desc(log2FoldChange))
@@ -213,7 +214,7 @@ colnames(means) <- 'AveExpr'
 
 # 5. Visualize DESeq2 results ==================================================
 
-## 5.1. PCA plot for differences between replicates (Suppl. Figure 2C) ---------
+## 5.1. PCA plot for differences between replicates (Suppl. Figure 3A) ---------
 pdf(paste0(out_dir, '030_rld_PCA.pdf'), height = 5, width = 5)
 plotPCA(rld, intgroup = 'condition') +
   geom_point(size = 3) +
@@ -225,7 +226,7 @@ plotPCA(rld, intgroup = 'condition') +
   theme(legend.position = 'bottom')
 dev.off()
 
-## 5.2. Heatmap of z-scores for top and bottom 50 DE-genes (Figure 2B) ---------
+## 5.2. Heatmap of z-scores for top and bottom 50 DE-genes (Figure 3B) ---------
 
 ### 5.2.1. Color palettes
 col_z <- colorRamp2(seq(min(z_sel), max(z_sel), length.out = nrow(z_sel)), 
@@ -272,7 +273,7 @@ dev.off()
 
 ## 5.3. Volcano plots ----------------------------------------------------------
 
-### 5.3.1. Volcano plot with all genes labelled (Suppl. Figure 2F)
+### 5.3.1. Volcano plot with all default genes labelled (Suppl. Figure 3D)
 pdf(paste0(out_dir, '050_volcano_allGenesLabeled.pdf'),
     width = 8,
     height = 8)
@@ -294,7 +295,7 @@ EnhancedVolcano(res_ex,
 )
 dev.off()
 
-### 5.3.2. Volcano plot with target genes of RUNX1::RUNX1T1 and differentiation markers (Figure 2C)
+### 5.3.2. Volcano plot with target genes of RUNX1::RUNX1T1 and differentiation markers (Figure 3C)
 genes_of_interest <- c('CD34',
                        'LINC01257',
                        'ANGPT1',
@@ -416,7 +417,7 @@ mygenesets_list <- split(mygenesets,
 
 ## 6.2. Make gene ranks --------------------------------------------------------
 
-##### By Mauricio's example, I use the stat column of the DESeq2 result as the ranking metric.
+##### I use the stat column of the DESeq2 result as the ranking metric.
 
 ranks <- res_df$stat
 names(ranks) <- rownames(res_df)
@@ -439,7 +440,7 @@ saveRDS(gsea_res, paste0(out_dir, '071_gsea_res.rds'))
 
 gsea_sign <- dplyr::filter(gsea_res, p.adjust < 0.05)
 
-## 6.4. Vizualize GSEA results in a bulk manner (Suppl. Figure 2D) -------------
+## 6.4. Plot GSEA-style plots for all the analyzed pathways (Suppl. Figure 3E for 3 of these pathways) ----
 pdf(paste0(out_dir, '080_gseaPlots.pdf'), width = 5, height = 5)
 plotlist <- map(mygenesets_names[mygenesets_names %in% gsea_sign$ID],
     function(geneset_name){
@@ -471,7 +472,7 @@ names(hay_geneCounts[hay_geneCounts > 1])
 
 gsea_hay <- dplyr::filter(gsea_res, grepl('^HAY_', ID))
 
-#### 6.5.2. Barplot
+#### 6.5.2. Barplot (Figure 3D)
 pdf(paste0(out_dir, '100_gsea_HAY_BONE_MARROW_barplot.pdf'), width = 10, height = 6)
 plotNES(gsea_hay)
 dev.off()
@@ -547,10 +548,11 @@ deseq_cellines <- lapply(names(cellines_mtx), function(celline_name){
 })
 names(deseq_cellines) <- names(cellines_mtx)
 
+## 7.7. Save results (not provided in the paper materials) ---------------------
 saveRDS(deseq_cellines, paste0(out_dir, '110_cellines_deseq2_out.rds'))
 ##### deseq_cellines <- readRDS(paste0(out_dir, '110_cellines_deseq2_out.rds'))
 
-## 7.7. Transformations and filtering of DESeq2 output -------------------------
+## 7.8. Transformations and filtering of DESeq2 output -------------------------
 res_cellines <- map(deseq_cellines, results)
 
 res_cellines_df <- lapply(names(res_cellines), function(celline_name){
@@ -564,13 +566,13 @@ names(res_cellines_df) <- names(res_cellines)
 
 res_ex_cellines <- map(res_cellines_df, ~ drop_na(.x, log2FoldChange, padj))
 
-## 7.8. Filter the DESeq2 output for the cell lines for significance and log2FC ----
+## 7.9. Filter the DESeq2 output for the cell lines for significance and log2FC ----
 res_cellines_filt <- lapply(res_ex_cellines, function(df){
   df_new <- df %>% dplyr::filter(padj < 0.05 & abs(log2FoldChange) > 1)
   return(df_new)
 })
 
-## 7.9. Split to down- and upregulated genes
+## 7.10. Split to down- and upregulated genes ----------------------------------
 res_cellines_split <- lapply(res_cellines_filt, function(df){
   sublist <- list(
     'up' = dplyr::filter(df, log2FoldChange > 0),
@@ -578,7 +580,7 @@ res_cellines_split <- lapply(res_cellines_filt, function(df){
   )
 })
 
-## 7.10. Extract the names of the genes that are substantially & significantly differentially expressed in each of the cellines ----
+## 7.11. Extract the names of the genes that are substantially & significantly differentially expressed in each of the cell lines ----
 cellines_genesets <- lapply(res_cellines_split, function(sublist){
   sublist_new <- lapply(sublist, function(df){
     vec <- rownames(df)
@@ -603,10 +605,11 @@ cellines_genesets <- lapply(cellines_genesets, function(sublist){
 }) 
 names(cellines_genesets) <- names(res_cellines_filt)
 
+## 7.12. Save results (not provided in the paper materials) --------------------
 saveRDS(cellines_genesets, paste0(out_dir, '140_cellines_genesets.rds'))
 ##### cellines_genesets <- readRDS(paste0(out_dir, '140_cellines_genesets.rds'))
 
-## 7.11. Run GSEA of the PDX against the genesets from cellines ----------------
+## 7.13. Run GSEA of the PDX against the genesets from cellines ----------------
 gsea_res_cellines <- map(cellines_genesets, ~GSEA(
   geneList = ranks,
   maxGSSize = 2000,
@@ -617,10 +620,11 @@ gsea_res_cellines <- map(cellines_genesets, ~GSEA(
   TERM2GENE = .x
 ))
 
+## 7.14. Save GSEA results (not provided in paper materials) -------------------
 saveRDS(gsea_res_cellines, paste0(out_dir, '151_gsea_res_againstCellines.rds'))
 ##### gsea_res_cellines <- readRDS(paste0(out_dir, '151_gsea_res_againstCellines.rds'))
 
-## 7.12. Vizualize GSEA results in a bulk manner (Figure 2A, Suppl. Figure 2E) ----
+## 7.15. Make GSEA-style plots (Figure 3A, Suppl. Figures 3B–C) ----------------
 pdf(paste0(out_dir, '160_gseaPlots_againstCellines.pdf'), width = 11, height = 11)
 plotlist1 <- map(c('Kasumi-1_up', 'Kasumi-1_dn'),
                 function(celline_name){
