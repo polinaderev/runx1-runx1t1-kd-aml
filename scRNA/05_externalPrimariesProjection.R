@@ -23,7 +23,7 @@ wd <- 'repos/runx1eto-kd-aml/scRNA/out/'
 set.seed(42)
 
 # 1. Load in the Zeng et al reference ==========================================
-##### Reference paper: https://www.biorxiv.org/content/10.1101/2023.12.26.573390v1
+##### Reference paper: https://doi.org/10.1158/2643-3230.BCD-24-0342
 ##### Reference Seurat object provided by Andy Zeng
 ref <- readRDS('references/Zeng_BoneMarrowMap_Annotated_Dataset.rds')
 Idents(ref) <- 'Tissue'
@@ -135,7 +135,7 @@ query_data <- lapply(names(seu), function(sample_name){
 })
 names(query_data) <- names(seu)
 
-### 2.3.1. UMAP colored by cell density
+### 2.3.1. UMAP colored by cell density (Suppl. Figure 8D)
 plotlist <- lapply(names(seu), function(sample_name){
     plt <- query_data[[sample_name]] %>%
       ggplot(aes(x = UMAP_1, y = UMAP_2)) +
@@ -155,7 +155,7 @@ pdf(paste0(wd, '705_lambo_umapAndy_density.pdf'), height = 3.5, width = 18)
 ggarrange(plotlist = plotlist, nrow = 1, ncol = length(plotlist))
 dev.off()
 
-### 2.3.3. UMAP colored by cell type prediction confidence
+### 2.3.3. UMAP colored by cell type prediction confidence (not included in the paper)
 plotlist <- lapply(names(seu), function(sample_name){
     plt <- query_data[[sample_name]] %>%
       ggplot(aes(x = UMAP_1, y = UMAP_2)) +

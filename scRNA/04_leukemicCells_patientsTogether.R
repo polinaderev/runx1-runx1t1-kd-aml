@@ -19,9 +19,6 @@ cbPalette2 <- c(cbPalette2[3:9], cbPalette2[11:15], "#999999")
 
 kdmm_palette <- c('RUNX1::RUNX1T1 knockdown' = '#f41626', 'mismatch control'= '#2538a5')
 
-vanGalenPalette <- c('GMP'='#4B0082', 'B'='#FFA500', 'T'="#009E73", 'Plasma'="#C1BC00", 'ProB'="#A5531C", 'Mono'="#008080", 'NA (MSC)'="#222222", 'ProMono'="#FF4856", 'cDC'="#7F7D70", 
-                     'NK'="#7B68EE", 'lateEry'="#FF5B00", 'HSC'="#0000FF", 'CTL'="#00FF7F", 'earlyEry'='#DC143C', 'Prog'="#AF08AF", 'pDC' = "#5A9DFF")
-
 zengPalette <- c('B' = "#FFA500", 'Plasma Cell' = "#C1BC00", 'Plasma_Cell' = "#C1BC00", 'Stromal' = "#222222", 'Early Erythroid' = "#FF0000",
                  'HSC MPP' = "#0000FF", 'CD4 Memory T' = "#00FA9A", 'CD8 Memory T' = "#008000", 'cDC' = "#7F7D70",
                  'Cycling Progenitor' = "#A2EF65", 'Early GMP' = "#4B0082", 'Early Lymphoid' = "#800000", 
@@ -125,7 +122,7 @@ saveRDS(seu_integr, paste0(wd, '475_leukemic_integrated.rds'))
 
 ### 2.2.4. Vizualize the UMAP
 
-#### 2.2.4.1. UMAP by condition (Figure 4I)
+#### 2.2.4.1. UMAP by condition (Figure 4H)
 pdf(paste0(wd, '480_integr_umap_byCond.pdf'), height = 3.5, width = 3)
 DimPlot(seu_integr,
         reduction = 'umap',
@@ -136,7 +133,7 @@ DimPlot(seu_integr,
   theme(legend.position = 'bottom')
 dev.off()
 
-#### 2.2.4.2. UMAP by patient (Figure 4J)
+#### 2.2.4.2. UMAP by patient (Figure 4I)
 pdf(paste0(wd, '490_integr_umap_byPt.pdf'), height = 3.5, width = 3)
 DimPlot(seu_integr,
         reduction = 'umap',
@@ -148,7 +145,7 @@ DimPlot(seu_integr,
   theme(legend.position = 'bottom')
 dev.off()
 
-#### 2.2.4.3. UMAP by cell cycle stage (Supplementary Figure 6E)
+#### 2.2.4.3. UMAP by cell cycle stage (Supplementary Figure 9E)
 pdf(paste0(wd, '500_integr_umap_byCellCycleStage.pdf'), height = 3.5, width = 3)
 DimPlot(seu_integr,
         reduction = 'umap',
@@ -186,7 +183,7 @@ seu_integr <- AddMetaData(seu_integr, metadata = preds[[1]], col.name = 'pred.Ze
 
 ### 3.1.4. Visualize
 
-#### 3.1.4.1. UMAP by cell type prediction (Figure 6A right)
+#### 3.1.4.1. UMAP by cell type prediction (Figure 6D)
 pdf(paste0(wd, '506_integr_umap_byZengPred.pdf'), height = 3.5, width = 2.75)
 DimPlot(seu_integr,
         reduction = 'umap',
@@ -198,7 +195,7 @@ DimPlot(seu_integr,
   theme(legend.position = 'bottom')
 dev.off()
 
-#### 3.1.4.2. UMAP by cell type prediction confidence (Figure 6B right)
+#### 3.1.4.2. UMAP by cell type prediction confidence (Figure 6E)
 pdf(paste0(wd, '514_integr_umap_byZengPred_score.pdf'), height = 3.5, width = 2.75)
 FeaturePlot(seu_integr,
             features = 'pred.Zeng.score') +
@@ -213,7 +210,7 @@ FeaturePlot(seu_integr,
   labs(title = NULL) 
 dev.off()
 
-#### 3.1.4.3. Box of cell type prediction confidence, by condition (Supplementary Figure 5A)
+#### 3.1.4.3. Box of cell type prediction confidence, by condition (Figure 6F)
 pdf(paste0(wd, '524_integr_box_byCond_ZengScore.pdf'), height = 2.5, width = 2)
 ggplot(seu_integr@meta.data, 
        aes(x = condition, 
@@ -251,7 +248,7 @@ markers <- FindAllMarkers(seu_integr,
                           only.pos = TRUE)
 saveRDS(markers, paste0(wd, '530_zengCelltypes_markers.rds'))
 
-### 3.2.2. Plot a heatmap with top markers -------------------------------------
+### 3.2.2. Plot a heatmap with top markers (Suppl. Figure 6A) ------------------
 markers <- markers %>%
   group_by(cluster) %>%
   dplyr::filter(avg_log2FC > 0.1 & p_val_adj < 0.05) %>%
@@ -307,7 +304,7 @@ seu_integr[['ref.umap']] <- CreateDimReducObject(as.matrix(emb[['umap']]))
 
 ### 3.3.3. Vizualise
 
-#### 3.3.3.1. Integrated object in Andy's UMAP coordinates, colored by cell density
+#### 3.3.3.1. Integrated object in Andy's UMAP coordinates, colored by cell density (not included in the paper)
 ref_data <- Embeddings(subset(ref, downsample = 50000)[["umap"]]) %>%
   as.data.frame() 
 
@@ -331,7 +328,7 @@ ggplot(query_data,
                  legend.position = 'none')
 dev.off()
 
-#### 3.3.3.1. Integrated object in Andy's UMAP coordinates, colored by cell density, split by condition
+#### 3.3.3.1. Integrated object in Andy's UMAP coordinates, colored by cell density, split by condition (Suppl. Fig. 5C)
 query_data <- lapply(unique(seu_integr@meta.data$condition),
                      function(MM_or_KD){
                        df <- query_data %>%
@@ -400,7 +397,7 @@ dev.off()
 # 5. Plot some marker genes ====================================================
 DefaultAssay(seu_integr) <- 'RNA'
 
-## 5.1. UMAP not split (Figures 5C, S5E) ---------------------------------------
+## 5.1. UMAP not split (Figures 5C, 6G, S8B) -----------------------------------
 goi <- c('CD24', 'IL5RA', 'RETN', 'SERPINA1', 'RNASE2', 'CEBPE', 'GATA2', 'CEBPA', 'CEBPB', 'CEBPD')
 
 pdf(paste0(wd, '545_integr_umap_genes_mono_granulo_eo_CD24_Cd125.pdf'), height = 3.5, width = length(goi)*2 + 2)
@@ -469,7 +466,7 @@ root_pr_nodes <- igraph::V(principal_graph(cds)[["UMAP"]])$name[as.numeric(names
 ### 6.2.3. Root the graph
 cds <- order_cells(cds, root_pr_nodes = root_pr_nodes)
 
-## 6.3. Plot the pseudotime (Figure 4K) ----------------------------------------
+## 6.3. Plot the pseudotime (Figure 4J) ----------------------------------------
 pdf(paste0(wd, '550_integr_umap_trajectory_byMonoclePseudotime.pdf'), 
     width = 3, height = 3.5)
 plot_cells(cds,
@@ -500,7 +497,7 @@ seu_integr <- FindClusters(seu_integr, resolution = 0.025)
 seu_cond <- SplitObject(seu_integr, split.by = 'condition')
 seu_superclust <- SplitObject(seu_integr, split.by = 'integrated_snn_res.0.025')
 
-## 7.2. Plot the superclusters (Figure 6C) -------------------------------------
+## 7.2. Plot the superclusters (Figures 6A, S7A) -------------------------------
 pdf(paste0(wd, '560_integr_umap_2clust.pdf'), width = 3, height = 3.5)
 map2(seu_cond, names(seu_cond),
      ~ DimPlot(.x,
@@ -513,7 +510,7 @@ map2(seu_cond, names(seu_cond),
        theme(legend.position = 'none'))
 dev.off()
 
-## 7.3. Boxplot by cell type prediction confidence by supercluster (Figure 6E) -----
+## 7.3. Boxplot by cell type prediction confidence by supercluster (Figure 6C) -----
 pdf(paste0(wd, '570_integr_box_by2Clust_ZengScore.pdf'), height = 2.5, width = 2.5)
 map2(seu_superclust, names(seu_superclust),
      ~ ggplot(.x@meta.data, 
@@ -541,7 +538,7 @@ map2(seu_superclust, names(seu_superclust),
                           label = "p.format"))
 dev.off()
 
-## 7.4. Proportions of phenotypes in supercluster I (Figure 6D left) ----------------
+## 7.4. Proportions of phenotypes in supercluster I (Figure 6B left) -----------
 seu_siRE_superclust <- SplitObject(seu_cond[['RUNX1::RUNX1T1 knockdown']], split.by = 'integrated_snn_res.0.025')
 
 celltype_counts <- dplyr::count(seu_siRE_superclust[['0']]@meta.data, 
@@ -569,7 +566,7 @@ ggplot(celltype_counts,
         axis.text.y = element_text(colour = "black"))
 dev.off()
 
-## 7.5. Proportions of phenotypes in supercluster II (Figure 6D right) ---------
+## 7.5. Proportions of phenotypes in supercluster II (Figure 6B right) ---------
 celltype_counts <- dplyr::count(seu_siRE_superclust[['1']]@meta.data, 
                                 pred.Zeng.celltype) %>%
   mutate(condition = 'knockdown')
@@ -595,7 +592,7 @@ ggplot(celltype_counts,
         axis.text.y = element_text(colour = "black"))
 dev.off()
 
-## 7.7. Cell type module scores (calculated earlier, now plotted for KD only; Supplementary Figure 5B) -----
+## 7.7. Cell type module scores (calculated earlier, now plotted for KD only; Suppl. Figure 6C) -----
 pdf(paste0(wd, '600_integr_kd_umap_HayModuleScores_quantileColor.pdf'), height = 4, width = 3)
 map(names(mygenesets),
     ~ FeaturePlot(seu_cond[['RUNX1::RUNX1T1 knockdown']],
@@ -617,7 +614,7 @@ dev.off()
 
 ## 7.8. Find markers of the clusters and compare them with markers of conditions ----
 
-### 7.8.1. Markers of the clusters (Supplementary Table 8)
+### 7.8.1. Markers of the clusters (Supplementary Table 9)
 Idents(seu_integr) <- 'integrated_snn_res.0.025'
 
 markers_clust <- FindMarkers(seu_integr,
@@ -653,7 +650,7 @@ markers <- list(
   'cond' = markers_cond
 )
 
-### 7.8.4. nVenn diagram of markers of the clusters and conditions (Figure 6F)
+### 7.8.4. nVenn diagram of markers of the clusters and conditions (Figure 6D)
 de_pos <- lapply(markers, function(tib){
   tib$gene <- rownames(tib)
   tib_pos <- dplyr::filter(tib, avg_log2FC > 0 & p_val_adj < 0.001)
@@ -682,7 +679,7 @@ plotVenn(markers_venn,
          setColors = c(cbPalette[6], cbPalette[7], kdmm_palette[1], kdmm_palette[2])
          )
 
-### 7.8.5. Lists of genes in each area of the Nvenn diagram (not included in the paper but you can re-make it by overlapping Suppl. Tables 7 and 8)
+### 7.8.5. Lists of genes in each area of the Nvenn diagram (not included in the paper but you can re-make it by overlapping Suppl. Tables 7 and 9)
 result <- c()
 
 groups <- names(upregulated_genes)
@@ -726,7 +723,7 @@ for (condition in names(exclusive_conditions)) {
 
 writeLines(result, paste0(wd, "604_geneListsFor_nVenn.txt"))
 
-## 7.9. UMAP split by condition, colored by patient and with nr of cells per patient in each supercluster (Suppl. Fig. 5) ------------
+## 7.9. UMAP split by condition, colored by patient and with nr of cells per patient in each supercluster (Suppl. Fig. 7B) ----
 seu_cond <- SplitObject(seu_integr, split.by = 'condition')
 
 pdf(paste0(wd, '604_integr_umap_2clust_byCond_byPt.pdf'), width = 3, height = 3.5)
@@ -778,7 +775,7 @@ map2(seu, names(seu),
        theme(legend.position = 'none'))
 dev.off()
 
-## 8.3. Find top markers for each cluster (not included in the paper) ---------
+## 8.3. Find top markers for each cluster (not included in the paper) ----------
 Idents(seu_integr) <- 'integrated_snn_res.0.57'
 markers <- FindAllMarkers(seu_integr, 
                           assay = "RNA",
@@ -835,7 +832,7 @@ gsea_res <- GSEA(
   TERM2GENE = goi
 )
 
-## 10.4. Vizualize GSEA results (Figure 7C, Supplementary Figure 6A) -----------
+## 10.4. Vizualize GSEA results (Figure 7C) ------------------------------------
 pdf(paste0(wd, '640_integr_gseaPlots_OlafsRanks_Zheng_Hay_HSC.pdf'), width = 10, height = 10)
 plotlist <- lapply(paste0(unique(goi$gs_name)), function(geneset_name){
   p <- enrichplot::gseaplot(
@@ -882,7 +879,7 @@ FeaturePlot(seu_integr,
 
 dev.off()
 
-# 13. Make supplementary tables 7 and 8 ========================================
+# 13. Make supplementary tables 7 and 9 ========================================
 
 ## 13.1. Supplementary table 7: markers RE vs MM -------------------------------
 markers <- readRDS(paste0(wd, '328_leukemic_allMarkers_KDvsMM.rds'))
@@ -906,7 +903,7 @@ markers_df <- markers[[1]] %>%
 
 write_csv(markers_df, paste0(wd, '680_allMarkers_allPatients_RE_vs_MM.csv'))
 
-## 13.2. Supplementary table 8: markers supercluster I vs II -------------------
+## 13.2. Supplementary table 9: markers supercluster I vs II -------------------
 full <- readRDS(paste0(wd, '601_integr_markers_clust0_vs_clust1.rds'))
 re <- readRDS(paste0(wd, '670_integr_REonly_markers_clust0_vs_clust1.rds'))
 
@@ -969,6 +966,7 @@ seu_save@meta.data <- seu_save@meta.data %>%
          pred.vanGalen.celltype, pred.vanGalen.score, matches('^HAY_BONE_MARROW'),
          matches('^integrated_snn_res'))
 saveRDS(seu_save, paste0(wd, 'seu_ptABCintegrated_leukemicCells.rds'))
+##### Available at https://doi.org/10.5281/zenodo.14578307, folder "scRNA"
 
 # 99. Session info =============================================================
 sink(paste0(wd, '999_sessionInfo_4.txt'))

@@ -1,6 +1,5 @@
 library(Seurat)
 library(tidyverse)
-library(harmony)
 
 library(clusterProfiler)
 library(msigdbr)
@@ -13,9 +12,6 @@ library(aplot)
 kdmm_palette <- c('RUNX1::RUNX1T1 knockdown' = '#f41626', 'mismatch control'= '#2538a5')
 
 cbPalette <- c("#E69F00", "#56B4E9","#009E73", "#F0E442", "#0072B2","#D55E00", "#CC79A7", "#999999")
-
-vanGalenPalette <- c('GMP'='#4B0082', 'B'='#FFA500', 'T'="#009E73", 'Plasma'="#C1BC00", 'ProB'="#A5531C", 'Mono'="#008080", 'NA (MSC)'="#222222", 'ProMono'="#FF4856", 'cDC'="#7F7D70", 
-                     'NK'="#7B68EE", 'lateEry'="#FF5B00", 'HSC'="#0000FF", 'CTL'="#00FF7F", 'earlyEry'='#DC143C', 'Prog'="#AF08AF", 'pDC' = "#5A9DFF")
 
 zengPalette <- c('B' = "#FFA500", 'Plasma Cell' = "#C1BC00", 'Plasma_Cell' = "#C1BC00", 'Stromal' = "#222222", 'Early Erythroid' = "#FF0000",
                  'HSC MPP' = "#0000FF", 'CD4 Memory T' = "#00FA9A", 'CD8 Memory T' = "#008000", 'cDC' = "#7F7D70",
@@ -39,7 +35,7 @@ set.seed(42)
 ##### A similar Seurat object (just supplemented with what this script adds to that object) is available at https://doi.org/10.5281/zenodo.14578307.
 seu_leukemic <- readRDS(paste0(wd, '300_seu_leukemic.rds'))
 
-## 1.2. UMAP by condition (Figure 4C) ------------------------------------------
+## 1.2. UMAP by condition (Figure 4B) ------------------------------------------
 pdf(paste0(wd, "330_leukemicOnly_umap_byCond.pdf"), height = 3.5, width = 8)
 p <- map2(seu_leukemic, names(seu_leukemic),
           ~ DimPlot(.x, 
@@ -52,7 +48,7 @@ p <- map2(seu_leukemic, names(seu_leukemic),
 ggarrange(plotlist = p, ncol = 3, common.legend = TRUE, legend = 'bottom')
 dev.off()
 
-## 1.3. Violin plots of RUNX1T1 and  RUNX1::RUNX1T1 target genes (Figure 4H) ----
+## 1.3. Violin plots of RUNX1T1 and  RUNX1::RUNX1T1 target genes (Figure 4G) ----
 
 ### 1.3.1. Preparations
 genes_of_interest <- c('RUNX1T1', 'CD34', 'NFE2')
@@ -115,7 +111,7 @@ dev.off()
 
 # 2. Differential expression analysis ==========================================
 
-## 2.1. Find all DE genes between the 2 conditions -----------------------------
+## 2.1. Find all DE genes between the 2 conditions (part of Suppl. Table 7) ----
 seu_leukemic <- lapply(seu_leukemic, function(obj){
   Idents(obj) <- 'condition'
   return(obj)
@@ -186,7 +182,7 @@ map2(gsea_res, csv_names, ~ write.csv(.x, paste0(wd, .y)))
 saveRDS(gsea_res, paste0(wd, '343_gsea_res_againstBulk.rds'))
 gsea_res <- readRDS(paste0(wd, '343_gsea_res_againstBulk.rds'))
 
-## 3.4. Vizualize GSEA results (Suppl. Figure 4F) ------------------------------
+## 3.4. Vizualize GSEA results (Suppl. Figure 4G) ------------------------------
 pdf(paste0(wd, '344_gseaPlots_againstBulk.pdf'), width = 10, height = 10)
 plotlist <- lapply(names(gsea_res), function(sample_name){
   sublist <- lapply(paste0('bulkRNAseq patient C (PDX), ', c('upregulated', 'downregulated')), function(geneset_name){
@@ -215,7 +211,8 @@ dev.off()
 # 4. LSC score =================================================================
 
 ## 4.1. Add score --------------------------------------------------------------
-##### Here, we are not using the original LSC6 formula but Seurat's AddModuleScore, in order to account for the sparcity of the single cell data.
+##### Here, we are not using the original LSC6 formula but Seurat's AddModuleScore, 
+##### in order to account for the sparcity of the single cell data.
 LSC_signature <- c("DNMT3B", "CD34", "ADGRG1", "SOCS2", "SPINK2", "FAM30A")
 
 seu_leukemic <- map(seu_leukemic,
@@ -318,7 +315,7 @@ gsea_res <- map(ranks, ~ GSEA(
 saveRDS(gsea_res, paste0(wd, '362_gsea_res_ZhengHSC_HayHSC.rds'))
 gsea_res <- readRDS(paste0(wd, '362_gsea_res_ZhengHSC_HayHSC.rds'))
 
-## 5.3. Vizualize GSEA results (Suppl. Figure 6A) ------------------------------
+## 5.3. Vizualize GSEA results (Suppl. Figure 9A) ------------------------------
 pdf(paste0(wd, '364_gseaPlots_OlafsRanks_Zheng_Hay_HSC.pdf'), width = 10, height = 10)
 plotlist <- lapply(names(gsea_res), function(sample_name){
   sublist <- lapply(paste0(unique(goi$gs_name)), function(geneset_name){
@@ -346,27 +343,27 @@ dev.off()
 
 pdf(paste0(wd, '364_gseaPlots_OlafsRanks_Hay_HSC.pdf'), width = 10, height = 10)
 plotlist <- lapply(names(gsea_res), function(sample_name){
-    p <- enrichplot::gseaplot(
-      gsea_res[[sample_name]],
-      geneSetID = 'HAY_BONE_MARROW_CD34_POS_HSC',
-      title = paste0(sample_name, ', ', 'HAY_BONE_MARROW_CD34_POS_HSC'),
-      color.line = '#21908c') %>%
-      as.patchwork()
-    p <- p + plot_annotation(subtitle = paste0(
-      'NES = ', as.character(signif(gsea_res[[sample_name]]@result$NES[gsea_res[[sample_name]]@result$ID == 'HAY_BONE_MARROW_CD34_POS_HSC'], digits = 3)),
-      ', padj = ', as.character(signif(gsea_res[[sample_name]]@result$p.adjust[gsea_res[[sample_name]]@result$ID == 'HAY_BONE_MARROW_CD34_POS_HSC'], digits = 3))
-    ))
-    return(p)
+  p <- enrichplot::gseaplot(
+    gsea_res[[sample_name]],
+    geneSetID = 'HAY_BONE_MARROW_CD34_POS_HSC',
+    title = paste0(sample_name, ', ', 'HAY_BONE_MARROW_CD34_POS_HSC'),
+    color.line = '#21908c') %>%
+    as.patchwork()
+  p <- p + plot_annotation(subtitle = paste0(
+    'NES = ', as.character(signif(gsea_res[[sample_name]]@result$NES[gsea_res[[sample_name]]@result$ID == 'HAY_BONE_MARROW_CD34_POS_HSC'], digits = 3)),
+    ', padj = ', as.character(signif(gsea_res[[sample_name]]@result$p.adjust[gsea_res[[sample_name]]@result$ID == 'HAY_BONE_MARROW_CD34_POS_HSC'], digits = 3))
+  ))
+  return(p)
 })
 print(plotlist[[1]])
 print(plotlist[[2]])
 print(plotlist[[3]])
 dev.off()
 
-# 6. Cell type projections according to Zeng et al (2023) reference ============
+# 6. Cell type projections according to Zeng et al (2025) reference ============
 
-##### Reference paper: https://www.biorxiv.org/content/10.1101/2023.12.26.573390v1
-##### Reference Seurat object provided by Andy Zeng
+##### Reference paper: https://doi.org/10.1158/2643-3230.BCD-24-0342
+##### Reference Seurat object kindly provided by Andy Zeng
 
 ## 6.1. Load in the reference and look at it (plot not included in the paper) -----
 ref <- readRDS('references/Zeng_BoneMarrowMap_Annotated_Dataset.rds')
@@ -454,7 +451,7 @@ saveRDS(pred_embeddings, paste0(wd, '379_zengEmbeddings.rds'))
 
 ## 6.3. Visualize --------------------------------------------------------------
 
-### 6.3.1. UMAP by predictions (Figure 6A left, middle left, middle right) 
+### 6.3.1. UMAP by predictions (Suppl. Figure 5B) 
 pdf(paste0(wd, '386_leukemicOnly_umap_predZeng.pdf'), height = 3.5, width = 7)
 p <- map2(seu_leukemic, names(seu_leukemic),
           ~ DimPlot(.x,
@@ -473,7 +470,7 @@ p <- map2(seu_leukemic, names(seu_leukemic),
 ggarrange(plotlist = p, ncol = 3, common.legend = TRUE, legend = 'bottom')
 dev.off()
 
-### 6.3.2. UMAP by prediction confidence (Figure 6B left, middle left, middle right)
+### 6.3.2. UMAP by prediction confidence (Suppl. figure 6B)
 pdf(paste0(wd, '394_leukemicOnly_umap_predZeng_score.pdf'), height = 3.5, width = 7)
 p <- map2(seu_leukemic, names(seu_leukemic),
           ~ FeaturePlot(.x,
@@ -518,7 +515,7 @@ p <- map2(seu_leukemic, names(seu_leukemic),
 ggarrange(plotlist = p, ncol = 3, common.legend = FALSE, legend = 'none')
 dev.off() 
 
-### 6.3.4. UMAP in Andy's coordinates, colored by cell density
+### 6.3.4. UMAP in Andy's coordinates, colored by cell density (not included in the paper)
 ref_data <- Embeddings(subset(ref, downsample = 50000)[["umap"]]) %>%
   as.data.frame() 
 
@@ -554,7 +551,7 @@ pdf(paste0(wd, '397_leukemicOnly_umapZeng_density.pdf'), height = 3.5, width = 1
 ggarrange(plotlist = plotlist, nrow = 1, ncol = 3)
 dev.off()
 
-### 6.3.5. UMAP in Andy's coordinates, colored by cell density, split by condition
+### 6.3.5. UMAP in Andy's coordinates, colored by cell density, split by condition (not included in the paper)
 seu <- map(seu_leukemic_umapAndy, ~ SplitObject(.x, split.by = 'condition'))
 
 query_data <- lapply(names(seu), function(MM_or_KD){
@@ -615,7 +612,7 @@ ggarrange(plotlist[['patientC']][['mismatch control']],
 
 dev.off()
 
-# 8. Make a list of Seurat objects for uploading to Zenodo =====================
+# 7. Make a list of Seurat objects for uploading to Zenodo =====================
 seu_save <- lapply(seu_leukemic, function(obj){
   obj[['HTO']] <- NULL
   obj[['RNA']]$scale.data <- NULL
@@ -625,6 +622,7 @@ seu_save <- lapply(seu_leukemic, function(obj){
   return(obj)
 })
 saveRDS(seu_save, paste0(wd, 'seu_ptABCseparately_leukemicCells.rds'))
+##### Available at https://doi.org/10.5281/zenodo.14578307, folder "scRNA"
 
 # 98. Session info ==============================================================
 sink(paste0(wd, '999_sessionInfo_3.txt'))

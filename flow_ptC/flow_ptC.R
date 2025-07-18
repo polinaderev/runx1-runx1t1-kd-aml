@@ -208,7 +208,7 @@ ggplot(dat_downsampled %>% sample_frac(),
         axis.ticks = element_blank())
 dev.off()
 
-### 4.3.4. Colored by expression of markers, split by condition (Figure 6E)
+### 4.3.4. Colored by expression of markers, split by condition (Figure 7D, Suppl. Figures 9B–C)
 pdf(paste0(wd, '051_tSNE_byMarkers.pdf'),
       height = 10, width = 10)
   

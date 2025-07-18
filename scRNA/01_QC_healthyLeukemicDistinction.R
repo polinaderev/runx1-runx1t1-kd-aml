@@ -24,7 +24,7 @@ set.seed(42)
 
 ## 1.1. UMI and HTO count matrix (from cellranger count output) ----------------
 
-##### If you wish to reproduce this part of the analysis, you'll have to run Cellranger yourself. Our FASTQs for this are available on EGA.
+##### If you wish to reproduce this part of the analysis, you'll have to run Cellranger yourself. Our FASTQs for this are available on EGA (EGAS00001008050).
 in_dir <- 'EX113_LS/deep/01_cellranger/'
 patient_name <- c('A', 'B', 'C')
 
@@ -545,7 +545,7 @@ seu[['patientC']] <- FindNeighbors(seu[['patientC']], dims = 1:19)
 
 seu <- map(seu, ~ FindClusters(.x, resolution = 0.25, graph.name = 'SCT_snn'))
 
-## 6.2. Vizualize clustering (Figure 4B) ---------------------------------------
+## 6.2. Vizualize clustering (not included in the paper) -----------------------
 
 p <- map2(seu, names(seu),
            ~ DimPlot(.x,
@@ -611,12 +611,11 @@ pmap(list(seu, names(seu), markers_filt),
        plot_annotation(title = ..2))
 dev.off()
 
-
 ##### Patient A: clusters 5,6,7,9 are putative healthy cells because they have a low ETO density.
 ##### Patient B: clusters 5,7 are putative healthy cells because they have a low ETO density.
 ##### Patient C: all clusters are leukemic, which is to be expected, because this is PDX.
 
-## 6.6. Make Seurat objects for healthy and leukemic cells, and also save the Seurat objects with both healthy and leukemic cells ---------------------
+## 6.6. Make Seurat objects for healthy and leukemic cells, and also save the Seurat objects with both healthy and leukemic cells (not included in the paper) ---------------------
 
 seu_healthy <- seu[c(1,2)]
 seu_healthy[['patientA']] <- subset(seu_healthy[['patientA']], SCT_snn_res.0.25 == 5 | SCT_snn_res.0.25 == 6 | SCT_snn_res.0.25 == 7 | SCT_snn_res.0.25 == 9)

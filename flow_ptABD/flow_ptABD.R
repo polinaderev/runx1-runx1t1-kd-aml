@@ -209,7 +209,7 @@ ggplot(dat_downsampled %>% sample_frac(),
 pca_list
 dev.off()
 
-### 4.3.2. Colored by patient
+### 4.3.2. Colored by patient (not included in the paper)
 pdf(paste0(wd, '041_PCA_scaledToVariance_ptsABD_bySample.pdf'), height = 4, width = 4.75)
 ggplot(dat_downsampled %>% sample_frac(),
        aes(x = PC1, y = PC2, color = patient_id)) +
@@ -224,7 +224,7 @@ ggplot(dat_downsampled %>% sample_frac(),
         axis.ticks = element_blank())
 dev.off()
 
-### 4.3.3. Colored by patient, split by condition
+### 4.3.3. Colored by patient, split by condition (not included in the paper)
 pdf(paste0(wd, '042_PCA_scaledToVariance_ptsABD_colByPt_splitByCond.pdf'), height = 7, width = 4.75)
 ggplot(dat_downsampled %>% sample_frac(),
        aes(x = PC1, y = PC2, color = patient_id)) +
@@ -261,7 +261,7 @@ saveRDS(dat_downsampled, paste0(wd, '990_data_forPlotting.rds'))
 
 ## 4.3. Plot tSNE -------------------------------------------------------------- 
 
-### 4.3.1. Colored by patient, split by condition (Suppl. Figure 6C)
+### 4.3.1. Colored by patient, split by condition (Suppl. Figure 7C)
 pdf(paste0(wd, '047_tSNE_ptABD_colByPt_splitByCond.pdf'), height = 5.5, width = 4)
 ggplot(dat_downsampled %>% sample_frac(),
        aes(x = tSNE1, y = tSNE2, color = patient_id)) +
@@ -278,7 +278,7 @@ ggplot(dat_downsampled %>% sample_frac(),
         axis.ticks = element_blank())
 dev.off()
 
-### 4.3.4. Colored by expression of markers, split by condition (Suppl. Figure 6B)
+### 4.3.4. Colored by expression of markers, split by condition (not included in the paper)
 pdf(paste0(wd, '051_tSNE_byMarkers.pdf'),
     height = 10, width = 10)
 
@@ -316,7 +316,7 @@ dev.off()
 
 # 6. Plot the 'double exposure' tSNEs ==========================================
 
-## 6.1. For CD34 and CD38 (Suppl. Figure 6D) -----------------------------------
+## 6.1. For CD34 and CD38 (Suppl. Figure 9D) -----------------------------------
 dat_downsampled$CD34_adj <- dat_downsampled[, 'CD34-APC'] - thresholds_scaled['CD34-APC']
 dat_downsampled$CD34_adj[dat_downsampled$CD34_adj < 0] <- 0
 max_cd34 <- max(dat_downsampled$CD34_adj)
@@ -369,7 +369,7 @@ ggarrange(tsne, legend_plot, nrow = 1, ncol = 2)
   
 dev.off()
 
-## 6.2. For CD14 and CD15 ------------------------------------------------------
+## 6.2. For CD14 and CD15 (Suppl. Figure 7D) -----------------------------------
 dat_downsampled$CD14_adj <- dat_downsampled[, 'CD14-FITC'] - thresholds_scaled['CD14-FITC']
 dat_downsampled$CD14_adj[dat_downsampled$CD14_adj < 0] <- 0
 max_cd14 <- max(dat_downsampled$CD14_adj)
@@ -422,7 +422,7 @@ ggarrange(tsne, legend_plot, nrow = 1, ncol = 2)
 
 dev.off()
 
-## 6.3. For CD125 and CD193 ------------------------------------------------------
+## 6.3. For CD125 and CD193 (Suppl. Figure 7E) ---------------------------------
 dat_downsampled$CD125_adj <- dat_downsampled[, 'CD125-PE'] - thresholds_scaled['CD125-PE']
 dat_downsampled$CD125_adj[dat_downsampled$CD125_adj < 0] <- 0
 max_cd125 <- max(dat_downsampled$CD125_adj)

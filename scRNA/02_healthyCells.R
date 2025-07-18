@@ -35,7 +35,7 @@ seu_healthy <- readRDS(paste0(wd, '290_seu_healthy.rds'))
 
 # 2. Perform differential expression analysis ==================================
 
-## 2.1 Find all markers between conditions -------------------------------------
+## 2.1 Find all markers between conditions (not included in the paper) ---------
 seu_healthy <- lapply(seu_healthy, function(obj){
   Idents(obj) <- 'condition'
   return(obj)
@@ -53,7 +53,7 @@ saveRDS(markers, paste0(wd, '310_healthy_allMarkers_KDvsMM.rds'))
 
 ## 2.2. Vizualize --------------------------------------------------------------
 
-### 2.2.1. UMAP by condition (Figure 4G)
+### 2.2.1. UMAP by condition (Figure 4C)
 p <- map2(seu_healthy, names(seu_healthy),
           ~ DimPlot(.x, 
                     reduction = "umap",
@@ -87,8 +87,8 @@ dev.off()
 
 # 3. Perform projection onto the reference dataset =============================
 
-##### Zeng et al (2023) reference 
-##### reference paper: https://www.biorxiv.org/content/10.1101/2023.12.26.573390v1
+##### Zeng et al (2025) reference 
+##### reference paper: https://doi.org/10.1158/2643-3230.BCD-24-0342
 ##### reference Seurat object provided by Andy Zeng
 
 ## 3.1. Load in the reference --------------------------------------------------
@@ -173,7 +173,7 @@ map2(seu_healthy, names(seu_healthy),
        labs(subtitle = .y))
 dev.off()
 
-### 4.3.3. Box of prediction confidence by condition (Figure 4F, Suppl. Figure 4G)
+### 4.3.3. Box of prediction confidence by condition (Figure 4F, Suppl. Figure 4F)
 pdf(paste0(wd, '325_healthy_box_byCond_ZengScore.pdf'), width = 2.5, height = 2.5)
 map2(seu_healthy, names(seu_healthy),
      ~ ggplot(.x@meta.data, 
