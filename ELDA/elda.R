@@ -58,7 +58,7 @@ ci_df <- data.frame(
   CI_upper = res$CI[, 3]
 )
 
-## 3.2. Plot -------------------------------------------------------------------
+## 3.2. Plot (Figure 7G) -------------------------------------------------------
 p <- ggplot(df, 
             aes(x = dose, y = log_nonres, color = group)) +
   geom_point(aes(shape = pch_type), size = 3) +
