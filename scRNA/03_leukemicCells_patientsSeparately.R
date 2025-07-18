@@ -298,7 +298,7 @@ dev.off()
 ##### Reference paper: https://doi.org/10.1158/2643-3230.BCD-24-0342
 ##### Reference Seurat object kindly provided by Andy Zeng
 
-## 6.1. Load in the reference and look at it (plot not included in the paper) -----
+## 5.1. Load in the reference and look at it (plot not included in the paper) -----
 ref <- readRDS('references/Zeng_BoneMarrowMap_Annotated_Dataset.rds')
 
 Idents(ref) <- 'Tissue'
@@ -313,7 +313,7 @@ DimPlot(ref %>% subset(downsample = 99999),
   labs(title = '')
 dev.off()
 
-## 6.2. Project ----------------------------------------------------------------
+## 5.2. Project ----------------------------------------------------------------
 seu_leukemic <- lapply(seu_leukemic, function(seuObj) {
   seuObj <- NormalizeData(seuObj)
   seuObj <- FindVariableFeatures(seuObj, selection.method = "vst", nfeatures = 2000)
@@ -382,9 +382,9 @@ pred_embeddings <- lapply(seu_leukemic_umapAndy, function(seuObj){
 
 saveRDS(pred_embeddings, paste0(wd, '379_zengEmbeddings.rds'))
 
-## 6.3. Visualize --------------------------------------------------------------
+## 5.3. Visualize --------------------------------------------------------------
 
-### 6.3.1. UMAP by predictions (Suppl. Figure 5B) 
+### 5.3.1. UMAP by predictions (Suppl. Figure 5B) 
 pdf(paste0(wd, '386_leukemicOnly_umap_predZeng.pdf'), height = 3.5, width = 7)
 p <- map2(seu_leukemic, names(seu_leukemic),
           ~ DimPlot(.x,
@@ -403,7 +403,7 @@ p <- map2(seu_leukemic, names(seu_leukemic),
 ggarrange(plotlist = p, ncol = 3, common.legend = TRUE, legend = 'bottom')
 dev.off()
 
-### 6.3.2. UMAP by prediction confidence (Suppl. figure 6B)
+### 5.3.2. UMAP by prediction confidence (Suppl. figure 6B)
 pdf(paste0(wd, '394_leukemicOnly_umap_predZeng_score.pdf'), height = 3.5, width = 7)
 p <- map2(seu_leukemic, names(seu_leukemic),
           ~ FeaturePlot(.x,
@@ -421,7 +421,7 @@ p <- map2(seu_leukemic, names(seu_leukemic),
 ggarrange(plotlist = p, ncol = 3, common.legend = TRUE, legend = 'bottom')
 dev.off()
 
-### 6.3.3. Box of prediction confidence by condition (not included in the paper)
+### 5.3.3. Box of prediction confidence by condition (not included in the paper)
 pdf(paste0(wd, '402_leukemicOnly_box_byCond_ZengScore.pdf'), width = 5, height = 2.5)
 p <- map2(seu_leukemic, names(seu_leukemic),
           ~ ggplot(.x@meta.data, 
@@ -448,7 +448,7 @@ p <- map2(seu_leukemic, names(seu_leukemic),
 ggarrange(plotlist = p, ncol = 3, common.legend = FALSE, legend = 'none')
 dev.off() 
 
-### 6.3.4. UMAP in Andy's coordinates, colored by cell density (not included in the paper)
+### 5.3.4. UMAP in Andy's coordinates, colored by cell density (not included in the paper)
 ref_data <- Embeddings(subset(ref, downsample = 50000)[["umap"]]) %>%
   as.data.frame() 
 
@@ -484,7 +484,7 @@ pdf(paste0(wd, '397_leukemicOnly_umapZeng_density.pdf'), height = 3.5, width = 1
 ggarrange(plotlist = plotlist, nrow = 1, ncol = 3)
 dev.off()
 
-### 6.3.5. UMAP in Andy's coordinates, colored by cell density, split by condition (Suppl. Figure 5C)
+### 5.3.5. UMAP in Andy's coordinates, colored by cell density, split by condition (not included in the paper)
 seu <- map(seu_leukemic_umapAndy, ~ SplitObject(.x, split.by = 'condition'))
 
 query_data <- lapply(names(seu), function(MM_or_KD){
@@ -545,7 +545,7 @@ ggarrange(plotlist[['patientC']][['mismatch control']],
 
 dev.off()
 
-# 8. Make a list of Seurat objects for uploading to Zenodo =====================
+# 6. Make a list of Seurat objects for uploading to Zenodo =====================
 seu_save <- lapply(seu_leukemic, function(obj){
   obj[['HTO']] <- NULL
   obj[['RNA']]$scale.data <- NULL
