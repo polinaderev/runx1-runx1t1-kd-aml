@@ -922,6 +922,27 @@ markers_df <- markers[[1]] %>%
 
 write_csv(markers_df, paste0(wd, '690_allMarkers_superclustI_vs_superclustII.csv'))
 
+# 96. Analyses that were requested by colleagues and are not part of this project ====
+
+## 96.1. AR (Anja 2025-09-19) --------------------------------------------------
+DefaultAssay(seu_integr) <- 'RNA'
+
+pdf(paste0(wd, '755_integr_umap_byAR.pdf'), height = 3.5, width = 8)
+FeaturePlot(seu_integr,
+            features = 'AR',
+            split.by = 'orig.ident') &
+  #scale_color_viridis() +
+  theme(axis.line = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = 'bottom') &
+  #labs(title = NULL) &
+  plot_annotation(subtitle = 'AR expression in t(8;21) samples')
+dev.off()
+
 # 97. Make pseudobulk counts for Assi-style GRN pictures =======================
 ##### Will be used as input by Sophie Kellaway
 DefaultAssay(seu_integr) <- 'RNA'
