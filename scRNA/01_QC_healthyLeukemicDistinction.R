@@ -621,13 +621,76 @@ seu_healthy <- seu[c(1,2)]
 seu_healthy[['patientA']] <- subset(seu_healthy[['patientA']], SCT_snn_res.0.25 == 5 | SCT_snn_res.0.25 == 6 | SCT_snn_res.0.25 == 7 | SCT_snn_res.0.25 == 9)
 seu_healthy[['patientB']] <- subset(seu_healthy[['patientB']], SCT_snn_res.0.25 == 5 | SCT_snn_res.0.25 == 7)
 saveRDS(seu_healthy, paste0(wd, '290_seu_healthy.rds'))
+##### seu_healthy <- readRDS(paste0(wd, '290_seu_healthy.rds'))
 
 seu_leukemic <- seu
 seu_leukemic [['patientA']] <- subset(seu_leukemic[['patientA']], SCT_snn_res.0.25 != 5 & SCT_snn_res.0.25 != 6 & SCT_snn_res.0.25 != 7 & SCT_snn_res.0.25 != 9)
 seu_leukemic[['patientB']] <- subset(seu_leukemic[['patientB']], SCT_snn_res.0.25 != 5 & SCT_snn_res.0.25 != 7)
 saveRDS(seu_leukemic, paste0(wd, '300_seu_leukemic.rds'))
+##### seu_leukemic <- readRDS(paste0(wd, '300_seu_leukemic.rds'))
 
 saveRDS(seu, paste0(wd, '305_seu_complete.rds'))
+##### seu <- readRDS(paste0(wd, '305_seu_complete.rds'))
+
+# 90. Analysis requested by other colleagues for their projects ================
+
+## AR positivity (Anja 2025-09-26) ---------------------------------------------
+seu <- lapply(seu, function(obj){
+  Idents(obj) <- 'condition'
+  return(obj)
+})
+
+seu_leukemic <- lapply(seu_leukemic, function(obj){
+  Idents(obj) <- 'condition'
+  return(obj)
+})
+
+ar <- lapply(seu, function(obj){
+  m <- FindMarkers(obj,
+                   ident.1 = 'RUNX1::RUNX1T1 knockdown',
+                   assay = 'RNA',
+                   logfc.threshold = 0,
+                   min.pct = 0,
+                   features = 'AR')
+})
+
+ar
+
+ar <- lapply(seu_leukemic, function(obj){
+  m <- FindMarkers(obj,
+                   ident.1 = 'RUNX1::RUNX1T1 knockdown',
+                   assay = 'RNA',
+                   logfc.threshold = 0,
+                   min.pct = 0,
+                   features = 'AR')
+})
+
+ar
+
+## ETO positivity (Anja 2025-09-26) --------------------------------------------
+goi <- lapply(seu, function(obj){
+  m <- FindMarkers(obj,
+                   ident.1 = 'RUNX1::RUNX1T1 knockdown',
+                   assay = 'RNA',
+                   logfc.threshold = 0,
+                   min.pct = 0,
+                   features = 'RUNX1T1')
+})
+
+goi
+
+seu_healthy_split <- lapply(seu_healthy, function(obj){
+  obj_split <- SplitObject(obj, split.by = 'condition')
+  return(obj_split)
+})
+
+seu_leukemic_split <- lapply(seu_leukemic, function(obj){
+  obj_split <- SplitObject(obj, split.by = 'condition')
+  return(obj_split)
+})
+
+seu_healthy_split
+seu_leukemic_split
 
 # 99. Session info =============================================================
 sink(paste0(wd, '999_sessionInfo_1.txt'))
