@@ -943,6 +943,27 @@ FeaturePlot(seu_integr,
   plot_annotation(subtitle = 'AR expression in t(8;21) samples')
 dev.off()
 
+## 96.2. PRAME (Olaf 2025-11-14) -----------------------------------------------
+DefaultAssay(seu_integr) <- 'RNA'
+
+goi <- 'PRAME'
+
+pdf(paste0(wd, '756_integr_umap_by', goi, '.pdf'), height = 3.5, width = 8)
+FeaturePlot(seu_integr,
+            features = goi,
+            split.by = 'orig.ident') &
+  #scale_color_viridis() +
+  theme(axis.line = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = 'bottom') &
+  #labs(title = NULL) &
+  plot_annotation(subtitle = paste0(goi, ' expression in t(8;21) samples'))
+dev.off()
+
 # 97. Make pseudobulk counts for Assi-style GRN pictures =======================
 ##### Will be used as input by Sophie Kellaway
 DefaultAssay(seu_integr) <- 'RNA'
